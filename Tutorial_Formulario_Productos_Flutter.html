@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formulario de productos en Flutter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: índice de pasos fijo a la izquierda · lectura al centro · teléfono que sigue tu paso a la derecha */
+:root {
+  --bg: #F3F5F9;
+  --surface: #FFFFFF;
+  --ink: #18202F;
+  --muted: #5B6578;
+  --line: #DCE2EB;
+  --accent: #2456D3;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E7EDFB;
+  --ok: #1D7F48;
+  --ok-soft: #E3F4EA;
+  --warn: #9A6200;
+  --warn-soft: #FBF1DC;
+  --err: #C0262D;
+  --err-soft: #FCE7E7;
+  --code-bg: #0F1522;
+  --code-head: #161E2E;
+  --shadow: 0 1px 2px rgba(20,32,60,.06), 0 8px 24px rgba(20,32,60,.06);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D121B; --surface: #141B27; --ink: #E6EBF3; --muted: #97A2B5; --line: #263044;
+    --accent: #7FA6FF; --accent-ink: #0D121B; --accent-soft: #1A2742;
+    --ok: #55C98D; --ok-soft: #12291F; --warn: #E7B451; --warn-soft: #2B2312; --err: #FF8080; --err-soft: #2E1618;
+    --code-bg: #0A0F18; --code-head: #111827; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D121B; --surface: #141B27; --ink: #E6EBF3; --muted: #97A2B5; --line: #263044;
+  --accent: #7FA6FF; --accent-ink: #0D121B; --accent-soft: #1A2742;
+  --ok: #55C98D; --ok-soft: #12291F; --warn: #E7B451; --warn-soft: #2B2312; --err: #FF8080; --err-soft: #2E1618;
+  --code-bg: #0A0F18; --code-head: #111827; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin: 0; }
+p { margin: 0; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--accent-soft); color: var(--accent); padding: .1em .38em; border-radius: 5px; overflow-wrap: anywhere; }
+kbd { font-family: var(--f-mono); font-size: .82em; background: var(--surface); border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 6px; padding: .05em .45em; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+/* ---------- Layout ---------- */
+.layout { display: grid; grid-template-columns: 244px minmax(0, 720px) 340px; gap: 44px; max-width: 1440px; margin: 0 auto; padding: 0 28px; justify-content: center; }
+.nav { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 28px 0 28px; display: flex; flex-direction: column; gap: 18px; }
+main { padding: 40px 0 120px; display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.aside { position: sticky; top: 0; height: 100vh; padding: 24px 0; display: flex; flex-direction: column; align-items: center; gap: 14px; overflow-y: auto; }
+
+/* ---------- Nav ---------- */
+.brand { font-family: var(--f-display); font-weight: 800; font-size: 15px; letter-spacing: .01em; display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; }
+.brand-mark svg { width: 16px; height: 16px; fill: none; stroke: var(--accent-ink); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.progress-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.progress-text { font-size: 14px; color: var(--muted); }
+.progress-text b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.bar { height: 6px; border-radius: 6px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 6px; transition: width .35s ease; }
+.nav ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.nav-group { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; margin: 6px 0 4px 10px; }
+.nav a { display: grid; grid-template-columns: 26px 1fr; align-items: center; gap: 8px; text-decoration: none; color: var(--muted); font-size: 14.5px; line-height: 1.3; padding: 7px 10px; border-radius: 9px; }
+.nav a:hover { background: var(--surface); color: var(--ink); }
+.nav a.is-current { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: inset 3px 0 0 var(--accent); }
+.nav .dot { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; font-family: var(--f-mono); font-weight: 600; color: var(--muted); background: var(--bg); font-variant-numeric: tabular-nums; }
+.nav a.is-current .dot { border-color: var(--accent); color: var(--accent); }
+.nav a.is-done .dot { background: var(--ok); border-color: var(--ok); color: transparent; position: relative; }
+.nav a.is-done .dot::after { content: ""; position: absolute; width: 9px; height: 5px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px, -1px); }
+.nav .dot.plain::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ---------- Hero ---------- */
+.hero { display: flex; flex-direction: column; gap: 16px; padding-bottom: 8px; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.hero h1 { font-size: clamp(34px, 5vw, 50px); font-weight: 800; letter-spacing: -.02em; }
+.lead { font-size: 19px; color: var(--muted); max-width: 62ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; padding: 4px 11px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+.pill b { color: var(--ink); }
+.goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
+.goal { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 15px; line-height: 1.45; }
+.goal b { display: block; font-family: var(--f-display); font-size: 16px; margin-bottom: 2px; }
+
+/* ---------- Step cards ---------- */
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 30px 34px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow); scroll-margin-top: 20px; }
+.step-head { display: flex; flex-direction: column; gap: 8px; }
+.step-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.step-num { font-family: var(--f-mono); font-size: 12.5px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 3px 9px; border-radius: 6px; letter-spacing: .04em; }
+.file-chip { font-family: var(--f-mono); font-size: 12px; color: var(--muted); border: 1px dashed var(--line); padding: 2px 8px; border-radius: 6px; }
+.step h2 { font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+.step h3 { font-size: 19px; font-weight: 700; margin-top: 6px; }
+.step p, .step li { max-width: 66ch; }
+.step ul, .step ol.plain { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+
+/* ---------- Code ---------- */
+.code { background: var(--code-bg); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,.04); }
+.code-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 8px 7px 14px; background: var(--code-head); border-bottom: 1px solid rgba(255,255,255,.06); }
+.code-file { font-family: var(--f-mono); font-size: 12px; color: #8D9AB0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.copy { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid rgba(255,255,255,.12); color: #C9D3E3; font-size: 12.5px; padding: 4px 10px; border-radius: 7px; flex-shrink: 0; }
+.copy:hover { background: rgba(255,255,255,.07); }
+.copy svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+.copy.ok { color: #6EE7A8; border-color: rgba(110,231,168,.4); }
+.copy.fail { color: #F7C46C; }
+.code pre { margin: 0; padding: 12px 0; overflow-x: auto; font-family: var(--f-mono); font-size: 13.4px; line-height: 1.62; color: #E3E9F3; counter-reset: ln; tab-size: 2; }
+pre { line-height: 125%; }
+td.linenos .normal { color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: #6e7681; background-color: #0d1117; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #e6edf3; background-color: #6e7681; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #e6edf3; background-color: #6e7681; padding-left: 5px; padding-right: 5px; }
+.code pre .hll { background-color: #6e7681 }
+.code pre { background: #0d1117; color: #E6EDF3 }
+.code pre .c { color: #8B949E; font-style: italic } /* Comment */
+.code pre .err { color: #F85149 } /* Error */
+.code pre .esc { color: #E6EDF3 } /* Escape */
+.code pre .g { color: #E6EDF3 } /* Generic */
+.code pre .k { color: #FF7B72 } /* Keyword */
+.code pre .l { color: #A5D6FF } /* Literal */
+.code pre .n { color: #E6EDF3 } /* Name */
+.code pre .o { color: #FF7B72; font-weight: bold } /* Operator */
+.code pre .x { color: #E6EDF3 } /* Other */
+.code pre .p { color: #E6EDF3 } /* Punctuation */
+.code pre .ch { color: #8B949E; font-style: italic } /* Comment.Hashbang */
+.code pre .cm { color: #8B949E; font-style: italic } /* Comment.Multiline */
+.code pre .cp { color: #8B949E; font-weight: bold; font-style: italic } /* Comment.Preproc */
+.code pre .cpf { color: #8B949E; font-style: italic } /* Comment.PreprocFile */
+.code pre .c1 { color: #8B949E; font-style: italic } /* Comment.Single */
+.code pre .cs { color: #8B949E; font-weight: bold; font-style: italic } /* Comment.Special */
+.code pre .gd { color: #FFA198; background-color: #490202 } /* Generic.Deleted */
+.code pre .ge { color: #E6EDF3; font-style: italic } /* Generic.Emph */
+.code pre .ges { color: #E6EDF3; font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.code pre .gr { color: #FFA198 } /* Generic.Error */
+.code pre .gh { color: #79C0FF; font-weight: bold } /* Generic.Heading */
+.code pre .gi { color: #56D364; background-color: #0F5323 } /* Generic.Inserted */
+.code pre .go { color: #8B949E } /* Generic.Output */
+.code pre .gp { color: #8B949E } /* Generic.Prompt */
+.code pre .gs { color: #E6EDF3; font-weight: bold } /* Generic.Strong */
+.code pre .gu { color: #79C0FF } /* Generic.Subheading */
+.code pre .gt { color: #FF7B72 } /* Generic.Traceback */
+.code pre .g-Underline { color: #E6EDF3; text-decoration: underline } /* Generic.Underline */
+.code pre .kc { color: #79C0FF } /* Keyword.Constant */
+.code pre .kd { color: #FF7B72 } /* Keyword.Declaration */
+.code pre .kn { color: #FF7B72 } /* Keyword.Namespace */
+.code pre .kp { color: #79C0FF } /* Keyword.Pseudo */
+.code pre .kr { color: #FF7B72 } /* Keyword.Reserved */
+.code pre .kt { color: #FF7B72 } /* Keyword.Type */
+.code pre .ld { color: #79C0FF } /* Literal.Date */
+.code pre .m { color: #A5D6FF } /* Literal.Number */
+.code pre .s { color: #A5D6FF } /* Literal.String */
+.code pre .na { color: #E6EDF3 } /* Name.Attribute */
+.code pre .nb { color: #E6EDF3 } /* Name.Builtin */
+.code pre .nc { color: #F0883E; font-weight: bold } /* Name.Class */
+.code pre .no { color: #79C0FF; font-weight: bold } /* Name.Constant */
+.code pre .nd { color: #D2A8FF; font-weight: bold } /* Name.Decorator */
+.code pre .ni { color: #FFA657 } /* Name.Entity */
+.code pre .ne { color: #F0883E; font-weight: bold } /* Name.Exception */
+.code pre .nf { color: #D2A8FF; font-weight: bold } /* Name.Function */
+.code pre .nl { color: #79C0FF; font-weight: bold } /* Name.Label */
+.code pre .nn { color: #FF7B72 } /* Name.Namespace */
+.code pre .nx { color: #E6EDF3 } /* Name.Other */
+.code pre .py { color: #79C0FF } /* Name.Property */
+.code pre .nt { color: #7EE787 } /* Name.Tag */
+.code pre .nv { color: #79C0FF } /* Name.Variable */
+.code pre .ow { color: #FF7B72; font-weight: bold } /* Operator.Word */
+.code pre .pm { color: #E6EDF3 } /* Punctuation.Marker */
+.code pre .w { color: #6E7681 } /* Text.Whitespace */
+.code pre .mb { color: #A5D6FF } /* Literal.Number.Bin */
+.code pre .mf { color: #A5D6FF } /* Literal.Number.Float */
+.code pre .mh { color: #A5D6FF } /* Literal.Number.Hex */
+.code pre .mi { color: #A5D6FF } /* Literal.Number.Integer */
+.code pre .mo { color: #A5D6FF } /* Literal.Number.Oct */
+.code pre .sa { color: #79C0FF } /* Literal.String.Affix */
+.code pre .sb { color: #A5D6FF } /* Literal.String.Backtick */
+.code pre .sc { color: #A5D6FF } /* Literal.String.Char */
+.code pre .dl { color: #79C0FF } /* Literal.String.Delimiter */
+.code pre .sd { color: #A5D6FF } /* Literal.String.Doc */
+.code pre .s2 { color: #A5D6FF } /* Literal.String.Double */
+.code pre .se { color: #79C0FF } /* Literal.String.Escape */
+.code pre .sh { color: #79C0FF } /* Literal.String.Heredoc */
+.code pre .si { color: #A5D6FF } /* Literal.String.Interpol */
+.code pre .sx { color: #A5D6FF } /* Literal.String.Other */
+.code pre .sr { color: #79C0FF } /* Literal.String.Regex */
+.code pre .s1 { color: #A5D6FF } /* Literal.String.Single */
+.code pre .ss { color: #A5D6FF } /* Literal.String.Symbol */
+.code pre .bp { color: #E6EDF3 } /* Name.Builtin.Pseudo */
+.code pre .fm { color: #D2A8FF; font-weight: bold } /* Name.Function.Magic */
+.code pre .vc { color: #79C0FF } /* Name.Variable.Class */
+.code pre .vg { color: #79C0FF } /* Name.Variable.Global */
+.code pre .vi { color: #79C0FF } /* Name.Variable.Instance */
+.code pre .vm { color: #79C0FF } /* Name.Variable.Magic */
+.code pre .il { color: #A5D6FF } /* Literal.Number.Integer.Long */
+.code pre { background: transparent !important; }
+.code .ln { display: block; padding: 0 18px 0 0; white-space: pre; counter-increment: ln; min-width: max-content; }
+.code .ln::before { content: counter(ln); display: inline-block; width: 44px; padding-right: 16px; text-align: right; color: #4A5568; user-select: none; }
+.code.short .ln::before { content: ""; width: 18px; padding-right: 0; }
+.code .ln.hl { background: rgba(127,166,255,.13); box-shadow: inset 3px 0 0 #7FA6FF; }
+.code .ln.hl::before { color: #9CB8FF; }
+.code-legend { font-size: 13.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; margin-top: -6px; }
+.code-legend i { width: 14px; height: 14px; border-radius: 3px; background: rgba(127,166,255,.25); box-shadow: inset 3px 0 0 #7FA6FF; }
+
+/* ---------- Callouts ---------- */
+.note { border-radius: 12px; padding: 14px 18px; display: flex; gap: 12px; align-items: flex-start; font-size: 16px; line-height: 1.55; }
+.note svg { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.note b.t { display: block; font-family: var(--f-display); font-size: 15.5px; margin-bottom: 2px; }
+.note.info { background: var(--accent-soft); color: var(--ink); } .note.info svg { color: var(--accent); }
+.note.check { background: var(--ok-soft); } .note.check svg { color: var(--ok); }
+.note.warn { background: var(--warn-soft); } .note.warn svg { color: var(--warn); }
+
+/* ---------- Misc blocks ---------- */
+.vs-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; counter-reset: vs; }
+.vs-steps li { counter-increment: vs; display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 12px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 10px; }
+.vs-steps li::before { content: counter(vs); width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 14px; }
+.tree { font-family: var(--f-mono); font-size: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; line-height: 1.9; }
+.tree div { display: flex; gap: 10px; align-items: baseline; }
+.tree .g { color: var(--muted); white-space: pre; }
+.tree .d { font-weight: 600; }
+.tree .tag { font-family: var(--f-body); font-size: 13px; color: var(--muted); }
+.defs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.def { border: 1px solid var(--line); border-radius: 11px; padding: 11px 14px; font-size: 15.5px; line-height: 1.45; display: flex; flex-direction: column; gap: 4px; }
+.def code { align-self: flex-start; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+th, td { text-align: left; padding: 10px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+.rule-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rule { border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; font-size: 15.5px; }
+.rule.e { background: var(--err-soft); } .rule.e strong { color: var(--err); }
+.rule.v { background: var(--ok-soft); } .rule.v strong { color: var(--ok); }
+.rule code { align-self: flex-start; background: var(--surface); color: var(--ink); }
+.samples { display: flex; flex-wrap: wrap; gap: 8px; }
+.sample { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 5px 11px; font-size: 14.5px; }
+.sample code { background: transparent; color: var(--ink); padding: 0; }
+.sample .r { font-size: 13px; font-weight: 700; }
+.sample.yes .r { color: var(--ok); } .sample.no .r { color: var(--err); }
+button.sample:hover { border-color: var(--accent); }
+.concept-row { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.flow { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; align-items: stretch; }
+.flow .box { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 15px; line-height: 1.45; position: relative; background: var(--surface); }
+.flow .box small { display: block; font-family: var(--f-mono); color: var(--accent); font-size: 12px; margin-bottom: 4px; }
+.flow .box:not(:last-child)::after { content: ""; position: absolute; right: -9px; top: 50%; width: 8px; height: 8px; border-top: 2px solid var(--muted); border-right: 2px solid var(--muted); transform: translateY(-50%) rotate(45deg); }
+.branch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.branch .box { border-radius: 12px; padding: 12px 14px; font-size: 15px; line-height: 1.45; }
+.branch .bad { background: var(--err-soft); } .branch .good { background: var(--ok-soft); }
+.branch b { display: block; font-family: var(--f-display); }
+
+/* ---------- Lab ---------- */
+.lab { border: 1.5px solid var(--accent); border-radius: 16px; padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, var(--accent-soft), transparent 70%); }
+.lab-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lab-title h3 { margin: 0; }
+.badge { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 2px 8px; }
+.lab label { font-size: 14px; font-weight: 700; }
+.lab input { width: 100%; font-family: var(--f-mono); font-size: 17px; padding: 11px 14px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
+.lab input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.lab-out { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lab-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lab-card h4 { margin: 0; font-family: var(--f-display); font-size: 16px; }
+.trace { font-family: var(--f-mono); font-size: 12.8px; line-height: 1.55; color: var(--muted); display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
+.trace b { color: var(--ink); font-weight: 600; }
+.verdict { font-size: 14.5px; font-weight: 700; padding: 6px 10px; border-radius: 8px; line-height: 1.35; }
+.verdict.ok { background: var(--ok-soft); color: var(--ok); }
+.verdict.bad { background: var(--err-soft); color: var(--err); }
+
+/* ---------- Checklist ---------- */
+.checklist { display: flex; flex-direction: column; gap: 10px; }
+.check-item { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: start; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; transition: background .2s, border-color .2s; }
+.check-item.on { background: var(--ok-soft); border-color: transparent; }
+.check-item input { width: 22px; height: 22px; accent-color: var(--ok); margin: 2px 0 0; cursor: pointer; }
+.check-item label { cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.check-item label b { font-weight: 700; }
+.check-item label span { color: var(--muted); font-size: 15.5px; }
+.try-btn { font-size: 13.5px; font-weight: 700; color: var(--accent); background: var(--surface); border: 1px solid var(--accent); padding: 6px 12px; border-radius: 8px; white-space: nowrap; }
+.try-btn:hover { background: var(--accent-soft); }
+.check-count { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------- Step footer ---------- */
+.step-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 16px; margin-top: 4px; }
+.done-btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; padding: 8px 16px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); }
+.done-btn .box { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--muted); display: grid; place-items: center; }
+.done-btn[aria-pressed="true"] { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.done-btn[aria-pressed="true"] .box { background: var(--ok); border-color: var(--ok); }
+.done-btn[aria-pressed="true"] .box::after { content: ""; width: 8px; height: 4px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px,-1px); }
+.next-link { font-weight: 700; text-decoration: none; font-size: 15px; }
+.next-link:hover { text-decoration: underline; }
+
+/* ---------- Tabs ---------- */
+.tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); }
+.tab { border: 0; background: transparent; padding: 9px 14px; font-family: var(--f-mono); font-size: 13.5px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--accent); border-color: var(--accent); font-weight: 600; }
+.tabpanel[hidden] { display: none; }
+
+/* ---------- Summary ---------- */
+.concepts { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.concept { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.concept code { align-self: flex-start; font-size: 14px; }
+.next-part { background: var(--ink); color: var(--bg); border-radius: 16px; padding: 22px 24px; display: flex; flex-direction: column; gap: 6px; }
+.next-part h3 { color: var(--bg); font-size: 21px; }
+.next-part p { opacity: .85; }
+
+/* ---------- Phone (simulación Material 3 por defecto de Flutter) ---------- */
+.sim-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); align-self: stretch; display: flex; justify-content: space-between; align-items: center; }
+.sim-label .live { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); }
+.sim-label .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.phone { width: 300px; height: 600px; flex-shrink: 0; border-radius: 40px; background: #1A1C22; padding: 10px; box-shadow: 0 20px 50px rgba(15,25,50,.22), inset 0 0 0 1.5px #3A3D46; }
+@media (max-height: 900px) { .aside .phone { zoom: .86; } }
+@media (max-height: 790px) { .aside .phone { zoom: .74; } }
+.screen { width: 100%; height: 100%; border-radius: 31px; overflow: hidden; background: #FEF7FF; position: relative; font-family: Roboto, "Segoe UI", sans-serif; color: #1D1B20; display: flex; flex-direction: column; color-scheme: light; }
+.sb { height: 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+.sb .cam { width: 12px; height: 12px; border-radius: 50%; background: #1A1C22; }
+.sb .ic { display: flex; gap: 5px; align-items: center; }
+.sb .ic i { display: block; background: #1D1B20; border-radius: 1px; }
+.appbar { height: 60px; display: flex; align-items: center; padding: 0 16px; font-size: 21px; flex-shrink: 0; letter-spacing: 0; }
+.body { flex: 1; position: relative; overflow: hidden; }
+.ph-center { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; letter-spacing: .25px; padding: 16px; text-align: center; }
+.ph-form { padding: 16px; display: flex; flex-direction: column; align-items: center; }
+.fld { width: 100%; position: relative; }
+.fld input { width: 100%; height: 54px; border: 1px solid #79747E; border-radius: 4px; background: transparent; padding: 16px 14px 0 15px; padding-top: 4px; font: 16px Roboto, sans-serif; color: #1D1B20; outline: none; letter-spacing: .5px; }
+.fld label { position: absolute; left: 11px; top: 16px; padding: 0 4px; font-size: 16px; color: #49454F; pointer-events: none; transition: all .15s ease; background: #FEF7FF; line-height: 20px; letter-spacing: .5px; }
+.fld input:focus { border: 2px solid #65558F; padding-left: 14px; }
+.fld input:focus + label { color: #65558F; }
+.fld input:focus + label, .fld input:not(:placeholder-shown) + label { top: -9px; font-size: 12px; left: 11px; }
+.fld.has-err input { border: 1px solid #B3261E; }
+.fld.has-err input:focus { border-width: 2px; }
+.fld.has-err label { color: #B3261E !important; }
+.fld .err { font-size: 12px; color: #B3261E; padding: 4px 16px 0; line-height: 16px; letter-spacing: .4px; display: none; }
+.fld.has-err .err { display: block; }
+.gap12 { height: 12px; } .gap16 { height: 16px; }
+.m3-btn { height: 40px; border-radius: 20px; padding: 0 24px; border: 0; background: #F7F2FA; color: #65558F; font: 500 14px Roboto, sans-serif; letter-spacing: .1px; box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px 1px rgba(0,0,0,.15); position: relative; overflow: hidden; }
+.m3-btn:active { background: #ECE6F0; }
+.m3-btn .rip { position: absolute; border-radius: 50%; background: rgba(101,85,143,.22); transform: scale(0); animation: rip .5s ease-out forwards; pointer-events: none; }
+@keyframes rip { to { transform: scale(4); opacity: 0; } }
+.snack { position: absolute; left: 0; right: 0; bottom: 0; background: #322F35; color: #F5EFF7; font-size: 14px; padding: 14px 16px 22px; transform: translateY(100%); transition: transform .25s ease; letter-spacing: .25px; }
+.snack.show { transform: translateY(0); }
+.homebar { position: absolute; bottom: 7px; left: 50%; width: 100px; height: 4px; margin-left: -50px; border-radius: 4px; background: #1D1B20; opacity: .5; z-index: 2; }
+.snack.show ~ .homebar { background: #fff; }
+.sim-panel { width: 300px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.sim-stage { font-size: 14.5px; line-height: 1.45; min-height: 3em; }
+.sim-stage b { font-family: var(--f-display); display: block; font-size: 15px; }
+.sim-stage.flash { color: var(--warn); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: 9px; padding: 3px; gap: 3px; }
+.seg button { border: 0; background: transparent; border-radius: 7px; padding: 6px 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.link-btn { border: 0; background: none; color: var(--accent); font-size: 13.5px; font-weight: 700; padding: 0; align-self: flex-start; }
+
+/* ---------- Mobile chrome ---------- */
+.topbar, .fab, .scrim, .sheet-close { display: none; }
+
+@media (max-width: 1260px) {
+  .layout { grid-template-columns: 232px minmax(0, 1fr); gap: 36px; }
+  .aside { position: fixed; z-index: 40; top: 0; right: 0; height: 100%; width: 360px; max-width: 100%; background: var(--bg); border-left: 1px solid var(--line); transform: translateX(105%); transition: transform .28s ease; padding: 20px 0 24px; box-shadow: -10px 0 40px rgba(0,0,0,.15); }
+  body.phone-open .aside { transform: none; }
+  .fab { display: inline-flex; position: fixed; z-index: 30; right: 20px; bottom: 20px; align-items: center; gap: 8px; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 99px; padding: 12px 18px; font-weight: 700; font-size: 15px; box-shadow: 0 10px 24px rgba(36,86,211,.35); }
+  .fab svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .scrim { display: block; position: fixed; inset: 0; background: rgba(8,12,20,.45); z-index: 35; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  body.phone-open .scrim, body.nav-open .scrim { opacity: 1; pointer-events: auto; }
+  .sheet-close { display: inline-flex; align-self: flex-end; margin-right: 24px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 12px; font-size: 14px; font-weight: 700; }
+}
+@media (max-width: 880px) {
+  .layout { grid-template-columns: minmax(0, 1fr); padding: 0 16px; }
+  .nav { position: fixed; z-index: 40; top: 0; left: 0; width: 290px; max-width: 86%; background: var(--bg); border-right: 1px solid var(--line); padding: 20px 16px; transform: translateX(-105%); transition: transform .28s ease; }
+  body.nav-open .nav { transform: none; }
+  .topbar { display: flex; position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); padding: 10px 16px; align-items: center; gap: 12px; margin: 0 -16px; }
+  .topbar button { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 6px 12px; font-weight: 700; font-size: 14px; }
+  .topbar .bar { flex: 1; }
+  .topbar .progress-text { font-size: 13px; white-space: nowrap; }
+  main { padding-top: 0; }
+  .hero { padding-top: 8px; }
+  .step { padding: 22px 18px; border-radius: 14px; }
+  .step h2 { font-size: 24px; }
+  .goals, .concept-row, .flow { grid-template-columns: 1fr; }
+  .flow .box:not(:last-child)::after { right: 50%; top: auto; bottom: -9px; transform: translateX(50%) rotate(135deg); }
+  html { scroll-padding-top: 64px; }
+}
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  .defs, .rule-pair, .branch, .lab-out, .concepts { grid-template-columns: 1fr; }
+  .check-item { grid-template-columns: 28px 1fr; }
+  .check-item .try-btn { grid-column: 2; justify-self: start; }
+  .code pre { font-size: 12.5px; }
+  .code .ln::before { width: 34px; padding-right: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ================= NAV ================= -->
+<nav class="nav" id="pasos" aria-label="Pasos del tutorial">
+  <div class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h7"/></svg></span>Inventario · Parte 1</div>
+  <div class="progress-card">
+    <div class="progress-text"><b data-progress-count>0</b> de 12 pasos hechos</div>
+    <div class="bar"><i data-progress-bar></i></div>
+  </div>
+  <div>
+    <ol>
+      <li><a href="#inicio"><span class="dot plain"></span>Qué vas a construir</a></li>
+    </ol>
+    <div class="nav-group">La pantalla</div>
+    <ol>
+      <li><a class="nav-step" data-step="1" href="#paso-1"><span class="dot">1</span>Crear el proyecto</a></li>
+      <li><a class="nav-step" data-step="2" href="#paso-2"><span class="dot">2</span>Mostrar la pantalla</a></li>
+      <li><a class="nav-step" data-step="3" href="#paso-3"><span class="dot">3</span>Crear la pantalla</a></li>
+      <li><a class="nav-step" data-step="4" href="#paso-4"><span class="dot">4</span>Agregar los campos</a></li>
+      <li><a class="nav-step" data-step="5" href="#paso-5"><span class="dot">5</span>Leer lo que se escribe</a></li>
+    </ol>
+    <div class="nav-group">Las validaciones</div>
+    <ol>
+      <li><a class="nav-step" data-step="6" href="#paso-6"><span class="dot">6</span>Qué es una validación</a></li>
+      <li><a class="nav-step" data-step="7" href="#paso-7"><span class="dot">7</span>Validar el nombre</a></li>
+      <li><a class="nav-step" data-step="8" href="#paso-8"><span class="dot">8</span>Validar el precio</a></li>
+      <li><a class="nav-step" data-step="9" href="#paso-9"><span class="dot">9</span>Validar la cantidad</a></li>
+      <li><a class="nav-step" data-step="10" href="#paso-10"><span class="dot">10</span>Agrupar en Form</a></li>
+      <li><a class="nav-step" data-step="11" href="#paso-11"><span class="dot">11</span>Conectar el botón</a></li>
+      <li><a class="nav-step" data-step="12" href="#paso-12"><span class="dot">12</span>Probar lo aprendido</a></li>
+    </ol>
+    <div class="nav-group">Cierre</div>
+    <ol>
+      <li><a href="#codigo-completo"><span class="dot plain"></span>Código completo</a></li>
+      <li><a href="#resumen"><span class="dot plain"></span>Qué aprendiste</a></li>
+    </ol>
+  </div>
+</nav>
+
+<!-- ================= MAIN ================= -->
+<main>
+  <div class="topbar">
+    <button type="button" data-open-nav aria-controls="pasos">Pasos</button>
+    <div class="bar"><i data-progress-bar></i></div>
+    <span class="progress-text"><b data-progress-count>0</b>/12</span>
+  </div>
+
+  <section class="hero" id="inicio" data-stage="12">
+    <span class="eyebrow">Flutter · App de inventario · Parte 1</span>
+    <h1>Formulario de productos con validaciones</h1>
+    <p class="lead">Vas a construir la primera parte de una aplicación de inventario: un formulario para escribir el nombre, el precio y la cantidad de un producto, que valida la información antes de continuar.</p>
+    <div class="meta">
+      <span class="pill"><b>12</b> pasos cortos</span>
+      <span class="pill"><b>2</b> archivos Dart</span>
+      <span class="pill">Desde cero</span>
+    </div>
+    <div class="goals">
+      <div class="goal"><b>Construir</b>Una pantalla con tres campos y un botón.</div>
+      <div class="goal"><b>Leer</b>Lo que escribe el usuario en cada campo.</div>
+      <div class="goal"><b>Validar</b>Que los datos cumplan reglas antes de continuar.</div>
+    </div>
+    <div class="note info">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+      <p>En esta primera parte todavía no guardaremos productos en una lista. Primero aprenderemos a construir el formulario y comprobar sus datos. El teléfono de la derecha muestra cómo va tu app en el paso que estás leyendo, y puedes usarlo.</p>
+    </div>
+  </section>
+
+  <!-- PASO 1 -->
+  <section class="step" id="paso-1" data-stage="1">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 01</span></div>
+      <h2>Crear el proyecto</h2>
+    </div>
+    <p>Abre Visual Studio Code y sigue estos pasos:</p>
+    <ol class="vs-steps">
+      <li><span>Presiona <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>.</span></li>
+      <li><span>Busca <b>Flutter: New Project</b>.</span></li>
+      <li><span>Selecciona <b>Application</b>.</span></li>
+      <li><span>Elige la carpeta donde guardarás el proyecto.</span></li>
+      <li><span>Escribe el nombre <code>inventario_productos</code>.</span></li>
+    </ol>
+    <p>Dentro de la carpeta <code>lib</code>, crea una carpeta llamada <code>screens</code>. Allí crea el archivo <code>pantalla_productos.dart</code>. La estructura quedará así:</p>
+    <div class="tree" role="img" aria-label="Estructura: lib contiene main.dart y la carpeta screens con pantalla_productos.dart">
+      <div><span class="d">lib/</span></div>
+      <div><span class="g">├── </span><span>main.dart</span><span class="tag">inicia la aplicación</span></div>
+      <div><span class="g">└── </span><span class="d">screens/</span></div>
+      <div><span class="g">    └── </span><span>pantalla_productos.dart</span><span class="tag">la pantalla que vamos a construir</span></div>
+    </div>
+    <div class="note info">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      <div><b class="t">¿Por qué usamos dos archivos?</b><p>Separar los archivos desde el principio nos ayuda a mantener el código organizado: uno arranca la app y el otro contiene la pantalla.</p></div>
+    </div>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="1" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-2">Paso 2: Mostrar la pantalla →</a></div>
+  </section>
+
+  <!-- PASO 2 -->
+  <section class="step" id="paso-2" data-stage="2">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 02</span><span class="file-chip">lib/main.dart</span></div>
+      <h2>Mostrar la pantalla de productos</h2>
+    </div>
+    <p>Abre <code>lib/main.dart</code>, elimina el contenido y escribe:</p>
+    <div class="code" data-raw="import &#x27;package:flutter/material.dart&#x27;;
+import &#x27;screens/pantalla_productos.dart&#x27;;
+
+void main() {
+  runApp(const MiAplicacion());
+}
+
+class MiAplicacion extends StatelessWidget {
+  const MiAplicacion({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: &#x27;Inventario de productos&#x27;,
+      home: const PantallaProductos(),
+    );
+  }
+}"><div class="code-head"><span class="code-file">lib/main.dart</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="k">import</span><span class="w"> </span><span class="s1">'package:flutter/material.dart'</span><span class="p">;</span></span><span class="ln hl"><span class="k">import</span><span class="w"> </span><span class="s1">'screens/pantalla_productos.dart'</span><span class="p">;</span></span><span class="ln">&#8203;</span><span class="ln"><span class="kt">void</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="n">runApp</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">MiAplicacion</span><span class="p">());</span></span><span class="ln"><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="kd">class</span><span class="w"> </span><span class="nc">MiAplicacion</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">StatelessWidget</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">MiAplicacion</span><span class="p">({</span><span class="k">super</span><span class="p">.</span><span class="n">key</span><span class="p">});</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="nd">@override</span></span><span class="ln"><span class="w">  </span><span class="n">Widget</span><span class="w"> </span><span class="n">build</span><span class="p">(</span><span class="n">BuildContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">MaterialApp</span><span class="p">(</span></span><span class="ln"><span class="w">      </span><span class="nl">debugShowCheckedModeBanner:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span></span><span class="ln"><span class="w">      </span><span class="nl">title:</span><span class="w"> </span><span class="s1">'Inventario de productos'</span><span class="p">,</span></span><span class="ln hl"><span class="w">      </span><span class="nl">home:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">PantallaProductos</span><span class="p">(),</span></span><span class="ln"><span class="w">    </span><span class="p">);</span></span><span class="ln"><span class="w">  </span><span class="p">}</span></span><span class="ln"><span class="p">}</span></span></pre></div>
+    <p class="code-legend"><i></i>Las líneas marcadas son las dos que conectan con el otro archivo.</p>
+    <h3>¿Qué debemos comprender?</h3>
+    <p>La instrucción:</p>
+    <div class="code short" data-raw="import &#x27;screens/pantalla_productos.dart&#x27;;"><div class="code-head"><span class="code-file">lib/main.dart</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="k">import</span><span class="w"> </span><span class="s1">'screens/pantalla_productos.dart'</span><span class="p">;</span></span></pre></div>
+    <p>permite utilizar una clase que está definida en otro archivo. Por su parte:</p>
+    <div class="code short" data-raw="home: const PantallaProductos(),"><div class="code-head"><span class="code-file">lib/main.dart</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="nl">home:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">PantallaProductos</span><span class="p">(),</span></span></pre></div>
+    <p>indica que la pantalla de productos será la primera que vea el usuario.</p>
+    <div class="note warn">
+      <svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <p>Todavía no hemos creado esa pantalla, así que VS Code marcará <code>PantallaProductos</code> en rojo. Es normal: lo resolvemos en el siguiente paso.</p>
+    </div>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="2" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-3">Paso 3: Crear la pantalla →</a></div>
+  </section>
+
+  <!-- PASO 3 -->
+  <section class="step" id="paso-3" data-stage="3">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 03</span><span class="file-chip">lib/screens/pantalla_productos.dart</span></div>
+      <h2>Crear la pantalla</h2>
+    </div>
+    <p>Abre <code>lib/screens/pantalla_productos.dart</code> y escribe este código:</p>
+    <div class="code" data-raw="import &#x27;package:flutter/material.dart&#x27;;
+
+class PantallaProductos extends StatefulWidget {
+  const PantallaProductos({super.key});
+
+  @override
+  State&lt;PantallaProductos&gt; createState() {
+    return _PantallaProductosState();
+  }
+}
+
+class _PantallaProductosState
+    extends State&lt;PantallaProductos&gt; {
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(&#x27;Inventario de productos&#x27;),
+      ),
+      body: const Center(
+        child: Text(&#x27;Aquí construiremos el formulario&#x27;),
+      ),
+    );
+  }
+}"><div class="code-head"><span class="code-file">lib/screens/pantalla_productos.dart</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="k">import</span><span class="w"> </span><span class="s1">'package:flutter/material.dart'</span><span class="p">;</span></span><span class="ln">&#8203;</span><span class="ln"><span class="kd">class</span><span class="w"> </span><span class="nc">PantallaProductos</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">StatefulWidget</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">PantallaProductos</span><span class="p">({</span><span class="k">super</span><span class="p">.</span><span class="n">key</span><span class="p">});</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="nd">@override</span></span><span class="ln"><span class="w">  </span><span class="n">State</span><span class="o">&lt;</span><span class="n">PantallaProductos</span><span class="o">&gt;</span><span class="w"> </span><span class="n">createState</span><span class="p">()</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">_PantallaProductosState</span><span class="p">();</span></span><span class="ln"><span class="w">  </span><span class="p">}</span></span><span class="ln"><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="kd">class</span><span class="w"> </span><span class="nc">_PantallaProductosState</span></span><span class="ln"><span class="w">    </span><span class="kd">extends</span><span class="w"> </span><span class="n">State</span><span class="o">&lt;</span><span class="n">PantallaProductos</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="nd">@override</span></span><span class="ln"><span class="w">  </span><span class="n">Widget</span><span class="w"> </span><span class="n">build</span><span class="p">(</span><span class="n">BuildContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Scaffold</span><span class="p">(</span></span><span class="ln"><span class="w">      </span><span class="nl">appBar:</span><span class="w"> </span><span class="n">AppBar</span><span class="p">(</span></span><span class="ln"><span class="w">        </span><span class="nl">title:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s1">'Inventario de productos'</span><span class="p">),</span></span><span class="ln"><span class="w">      </span><span class="p">),</span></span><span class="ln"><span class="w">      </span><span class="nl">body:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Center</span><span class="p">(</span></span><span class="ln"><span class="w">        </span><span class="nl">child:</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s1">'Aquí construiremos el formulario'</span><span class="p">),</span></span><span class="ln"><span class="w">      </span><span class="p">),</span></span><span class="ln"><span class="w">    </span><span class="p">);</span></span><span class="ln"><span class="w">  </span><span class="p">}</span></span><span class="ln"><span class="p">}</span></span></pre></div>
+    <h3>¿Qué significa cada elemento?</h3>
+    <div class="defs">
+      <div class="def"><code>StatefulWidget</code>Permite que la pantalla cambie cuando el usuario interactúe con ella.</div>
+      <div class="def"><code>Scaffold</code>Proporciona la estructura básica de una pantalla.</div>
+      <div class="def"><code>AppBar</code>Muestra la barra superior.</div>
+      <div class="def"><code>Center</code>Centra su contenido.</div>
+      <div class="def"><code>Text</code>Muestra un mensaje.</div>
+    </div>
+    <div class="note check">
+      <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>
+      <div><b class="t">Prueba lo que llevas</b><p>Ejecuta la aplicación con <code>flutter run</code>. Debes ver el título «Inventario de productos» y el mensaje central, igual que en el teléfono de la derecha.</p></div>
+    </div>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="3" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-4">Paso 4: Agregar los campos →</a></div>
+  </section>
+
+  <!-- PASO 4 -->
+  <section class="step" id="paso-4" data-stage="4">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 04</span><span class="file-chip">pantalla_productos.dart</span></div>
+      <h2>Agregar los campos del formulario</h2>
+    </div>
+    <p>Ahora cambiaremos el mensaje central por tres campos de texto y un botón. Reemplaza <b>únicamente</b> el método <code>build()</code> por este:</p>
+    <div class="code" data-raw="@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text(&#x27;Inventario de productos&#x27;),
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          TextField(
+            decoration: const InputDecoration(
+              labelText: &#x27;Nombre del producto&#x27;,
+              border: OutlineInputBorder(),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          TextField(
+            decoration: const InputDecoration(
+              labelText: &#x27;Precio&#x27;,
+              border: OutlineInputBorder(),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          TextField(
+            decoration: const InputDecoration(
+              labelText: &#x27;Cantidad&#x27;,
+              border: OutlineInputBorder(),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          ElevatedButton(
+            onPressed: () {},
+            child: const Text(&#x27;Validar formulario&#x27;),
+          ),
+        ],
+      ),
+    ),
+  );
+}"><div class="code-head"><span class="code-file">lib/screens/pantalla_productos.dart</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="nd">@override</span></span><span class="ln"><span class="n">Widget</span><span class="w"> </span><span class="n">build</span><span class="p">(</span><span class="n">BuildContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Scaffold</span><span class="p">(</span></span><span class="ln"><span class="w">    </span><span class="nl">appBar:</span><span class="w"> </span><span class="n">AppBar</span><span class="p">(</span></span><span class="ln"><span class="w">      </span><span class="nl">title:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s1">'Inventario de productos'</span><span class="p">),</span></span><span class="ln"><span class="w">    </span><span class="p">),</span></span><span class="ln"><span class="w">    </span><span class="nl">body:</span><span class="w"> </span><span class="n">Padding</span><span class="p">(</span></span><span class="ln"><span class="w">      </span><span class="nl">padding:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">EdgeInsets</span><span class="p">.</span><span class="n">all</span><span class="p">(</span><span class="m">16</span><span class="p">),</span></span><span class="ln"><span class="w">      </span><span class="nl">child:</span><span class="w"> </span><span class="n">Column</span><span class="p">(</span></span><span class="ln"><span class="w">        </span><span class="nl">children:</span><span class="w"> </span><span class="p">[</span></span><span class="ln"><span class="w">          </span><span class="n">TextField</span><span class="p">(</span></span><span class="ln"><span class="w">            </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">              </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Nombre del producto'</span><span class="p">,</span></span><span class="ln"><span class="w">              </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">            </span><span class="p">),</span></span><span class="ln"><span class="w">          </span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">          </span><span class="k">const</span><span class="w"> </span><span class="n">SizedBox</span><span class="p">(</span><span class="nl">height:</span><span class="w"> </span><span class="m">12</span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">          </span><span class="n">TextField</span><span class="p">(</span></span><span class="ln"><span class="w">            </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">              </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Precio'</span><span class="p">,</span></span><span class="ln"><span class="w">              </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">            </span><span class="p">),</span></span><span class="ln"><span class="w">          </span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">          </span><span class="k">const</span><span class="w"> </span><span class="n">SizedBox</span><span class="p">(</span><span class="nl">height:</span><span class="w"> </span><span class="m">12</span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">          </span><span class="n">TextField</span><span class="p">(</span></span><span class="ln"><span class="w">            </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">              </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Cantidad'</span><span class="p">,</span></span><span class="ln"><span class="w">              </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">            </span><span class="p">),</span></span><span class="ln"><span class="w">          </span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">          </span><span class="k">const</span><span class="w"> </span><span class="n">SizedBox</span><span class="p">(</span><span class="nl">height:</span><span class="w"> </span><span class="m">16</span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">          </span><span class="n">ElevatedButton</span><span class="p">(</span></span><span class="ln"><span class="w">            </span><span class="nl">onPressed:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{},</span></span><span class="ln"><span class="w">            </span><span class="nl">child:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s1">'Validar formulario'</span><span class="p">),</span></span><span class="ln"><span class="w">          </span><span class="p">),</span></span><span class="ln"><span class="w">        </span><span class="p">],</span></span><span class="ln"><span class="w">      </span><span class="p">),</span></span><span class="ln"><span class="w">    </span><span class="p">),</span></span><span class="ln"><span class="w">  </span><span class="p">);</span></span><span class="ln"><span class="p">}</span></span></pre></div>
+    <h3>¿Qué estamos utilizando?</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Widget</th><th>¿Para qué sirve?</th></tr></thead>
+      <tbody>
+        <tr><td><code>Column</code></td><td>Organiza los elementos verticalmente.</td></tr>
+        <tr><td><code>TextField</code></td><td>Permite escribir información.</td></tr>
+        <tr><td><code>InputDecoration</code></td><td>Define la etiqueta y el borde del campo.</td></tr>
+        <tr><td><code>SizedBox</code></td><td>Deja espacio entre los elementos.</td></tr>
+        <tr><td><code>ElevatedButton</code></td><td>Crea un botón.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note warn">
+      <svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <p>En este momento los campos permiten escribir, pero el botón todavía no hace nada (<code>onPressed: () {}</code>) y no existen validaciones. Pulsa el botón del teléfono para comprobarlo.</p>
+    </div>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="4" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-5">Paso 5: Leer lo que se escribe →</a></div>
+  </section>
+
+  <!-- PASO 5 -->
+  <section class="step" id="paso-5" data-stage="5">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 05</span><span class="file-chip">pantalla_productos.dart</span></div>
+      <h2>Aprender a leer lo que escribe el usuario</h2>
+    </div>
+    <p>Para validar los datos, primero debemos poder acceder a ellos. Flutter proporciona una herramienta llamada <code>TextEditingController</code>.</p>
+    <p>Dentro de <code>_PantallaProductosState</code>, antes del método <code>build()</code>, agrega:</p>
+    <div class="code" data-raw="final nombreController = TextEditingController();
+final precioController = TextEditingController();
+final cantidadController = TextEditingController();"><div class="code-head"><span class="code-file">dentro de _PantallaProductosState</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="kd">final</span><span class="w"> </span><span class="n">nombreController</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TextEditingController</span><span class="p">();</span></span><span class="ln"><span class="kd">final</span><span class="w"> </span><span class="n">precioController</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TextEditingController</span><span class="p">();</span></span><span class="ln"><span class="kd">final</span><span class="w"> </span><span class="n">cantidadController</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TextEditingController</span><span class="p">();</span></span></pre></div>
+    <p>Estos tres controladores nos permiten leer el contenido de cada campo. Por ejemplo, si el usuario escribe <b>Teclado</b>, podemos obtenerlo así:</p>
+    <div class="code short" data-raw="nombreController.text"><div class="code-head"><span class="code-file">lectura</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="n">nombreController</span><span class="p">.</span><span class="n">text</span></span></pre></div>
+    <p>Si escribe <b>85000</b> en el campo del precio:</p>
+    <div class="code short" data-raw="precioController.text"><div class="code-head"><span class="code-file">lectura</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="n">precioController</span><span class="p">.</span><span class="n">text</span></span></pre></div>
+    <div class="note info">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+      <p>El resultado es <b>texto</b>, incluso si contiene números: <code>"85000"</code>, no <code>85000</code>. Más adelante validaremos ese texto y comprobaremos si representa un número válido.</p>
+    </div>
+    <h3>Conectar los controladores</h3>
+    <p>Agrega la propiedad <code>controller</code> a cada campo. Por ejemplo, el campo del nombre debe quedar así:</p>
+    <div class="code" data-raw="TextField(
+  controller: nombreController,
+  decoration: const InputDecoration(
+    labelText: &#x27;Nombre del producto&#x27;,
+    border: OutlineInputBorder(),
+  ),
+),"><div class="code-head"><span class="code-file">campo del nombre</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="n">TextField</span><span class="p">(</span></span><span class="ln hl"><span class="w">  </span><span class="nl">controller:</span><span class="w"> </span><span class="n">nombreController</span><span class="p">,</span></span><span class="ln"><span class="w">  </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">    </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Nombre del producto'</span><span class="p">,</span></span><span class="ln"><span class="w">    </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">  </span><span class="p">),</span></span><span class="ln"><span class="p">),</span></span></pre></div>
+    <p>Haz lo mismo con los otros dos campos:</p>
+    <ul>
+      <li>Precio: <code>controller: precioController</code></li>
+      <li>Cantidad: <code>controller: cantidadController</code></li>
+    </ul>
+    <p>También debemos liberar los controladores cuando la pantalla se cierre. Agrega este método dentro de <code>_PantallaProductosState</code>, fuera de <code>build()</code>:</p>
+    <div class="code" data-raw="@override
+void dispose() {
+  nombreController.dispose();
+  precioController.dispose();
+  cantidadController.dispose();
+
+  super.dispose();
+}"><div class="code-head"><span class="code-file">dentro de _PantallaProductosState</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="nd">@override</span></span><span class="ln"><span class="kt">void</span><span class="w"> </span><span class="n">dispose</span><span class="p">()</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="n">nombreController</span><span class="p">.</span><span class="n">dispose</span><span class="p">();</span></span><span class="ln"><span class="w">  </span><span class="n">precioController</span><span class="p">.</span><span class="n">dispose</span><span class="p">();</span></span><span class="ln"><span class="w">  </span><span class="n">cantidadController</span><span class="p">.</span><span class="n">dispose</span><span class="p">();</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="k">super</span><span class="p">.</span><span class="n">dispose</span><span class="p">();</span></span><span class="ln"><span class="p">}</span></span></pre></div>
+    <div class="note check">
+      <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>
+      <div><b class="t">Comprueba tu avance</b><p>Los tres campos deben seguir funcionando y ahora cada uno tiene un controlador que permite leer su contenido.</p></div>
+    </div>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="5" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-6">Paso 6: Qué es una validación →</a></div>
+  </section>
+
+  <!-- PASO 6 -->
+  <section class="step" id="paso-6" data-stage="6">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 06</span><span class="file-chip">pantalla_productos.dart</span></div>
+      <h2>Entender qué es una validación</h2>
+    </div>
+    <p>Una validación es una regla que comprueba si la información ingresada cumple una condición. En nuestro formulario aplicaremos estas reglas:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Campo</th><th>Regla</th><th>Mensaje si falla</th></tr></thead>
+      <tbody>
+        <tr><td><b>Nombre</b></td><td>No puede estar vacío.</td><td>Escribe el nombre del producto</td></tr>
+        <tr><td><b>Precio</b></td><td>Debe ser un número mayor que cero.</td><td>Escribe un precio válido mayor que cero</td></tr>
+        <tr><td><b>Cantidad</b></td><td>Debe ser un número entero mayor que cero.</td><td>Escribe una cantidad entera mayor que cero</td></tr>
+      </tbody>
+    </table></div>
+    <p>Para lograrlo, vamos a aprender dos elementos nuevos: <code>Form</code> y <code>TextFormField</code>.</p>
+    <div class="concept-row" style="grid-template-columns: 1fr 1fr;">
+      <div class="def"><code>Form</code>Agrupa varios campos y permite validarlos todos desde un mismo lugar. Para identificarlo necesitamos una llave.</div>
+      <div class="def"><code>TextFormField</code>Es un campo de texto que incorpora la propiedad <b>validator</b>, donde escribimos la regla de validación.</div>
+    </div>
+    <p>Dentro de <code>_PantallaProductosState</code>, agrega la llave del formulario:</p>
+    <div class="code short" data-raw="final formularioKey = GlobalKey&lt;FormState&gt;();"><div class="code-head"><span class="code-file">dentro de _PantallaProductosState</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="kd">final</span><span class="w"> </span><span class="n">formularioKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GlobalKey</span><span class="o">&lt;</span><span class="n">FormState</span><span class="o">&gt;</span><span class="p">();</span></span></pre></div>
+    <p>La llave nos permitirá pedirle al formulario que compruebe sus campos cuando se pulse el botón. Y como necesitamos <b>validator</b>, en los próximos pasos vamos a reemplazar los <code>TextField</code> por <code>TextFormField</code>.</p>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="6" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-7">Paso 7: Validar el nombre →</a></div>
+  </section>
+
+  <!-- PASO 7 -->
+  <section class="step" id="paso-7" data-stage="7">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 07</span><span class="file-chip">pantalla_productos.dart</span></div>
+      <h2>Validar el nombre del producto</h2>
+    </div>
+    <p>Reemplaza el campo del nombre por este código:</p>
+    <div class="code" data-raw="TextFormField(
+  controller: nombreController,
+  decoration: const InputDecoration(
+    labelText: &#x27;Nombre del producto&#x27;,
+    border: OutlineInputBorder(),
+  ),
+  validator: (valor) {
+    if (valor == null || valor.trim().isEmpty) {
+      return &#x27;Escribe el nombre del producto&#x27;;
+    }
+
+    return null;
+  },
+),"><div class="code-head"><span class="code-file">campo del nombre</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln hl"><span class="n">TextFormField</span><span class="p">(</span></span><span class="ln"><span class="w">  </span><span class="nl">controller:</span><span class="w"> </span><span class="n">nombreController</span><span class="p">,</span></span><span class="ln"><span class="w">  </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">    </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Nombre del producto'</span><span class="p">,</span></span><span class="ln"><span class="w">    </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">  </span><span class="p">),</span></span><span class="ln hl"><span class="w">  </span><span class="nl">validator:</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln hl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">().</span><span class="n">isEmpty</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln hl"><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe el nombre del producto'</span><span class="p">;</span></span><span class="ln hl"><span class="w">    </span><span class="p">}</span></span><span class="ln hl">&#8203;</span><span class="ln hl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span></span><span class="ln hl"><span class="w">  </span><span class="p">},</span></span><span class="ln"><span class="p">),</span></span></pre></div>
+    <p class="code-legend"><i></i>Lo nuevo: <code>TextFormField</code> y la función <code>validator</code>.</p>
+    <h3>Explicación sencilla</h3>
+    <p>La función <code>validator</code> recibe el valor escrito en el campo.</p>
+    <div class="code" data-raw="if (valor == null || valor.trim().isEmpty) {
+  return &#x27;Escribe el nombre del producto&#x27;;
+}"><div class="code-head"><span class="code-file">la condición</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">().</span><span class="n">isEmpty</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe el nombre del producto'</span><span class="p">;</span></span><span class="ln"><span class="p">}</span></span></pre></div>
+    <p>Esta condición comprueba si el campo está vacío o contiene únicamente espacios (<code>trim()</code> los quita antes de comprobar).</p>
+    <div class="rule-pair">
+      <div class="rule e"><strong>Devuelve un texto → hay un error</strong><code>return 'Escribe el nombre del producto';</code>Flutter muestra ese texto debajo del campo, en rojo.</div>
+      <div class="rule v"><strong>Devuelve null → el campo es válido</strong><code>return null;</code>Si tiene un nombre, la función llega hasta aquí.</div>
+    </div>
+    <div class="note info">
+      <svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/></svg>
+      <div><b class="t">Regla para recordar</b><p>En un validador, devolver un texto significa que hay un error; devolver <code>null</code> significa que el campo es válido.</p></div>
+    </div>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="7" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-8">Paso 8: Validar el precio →</a></div>
+  </section>
+
+  <!-- PASO 8 -->
+  <section class="step" id="paso-8" data-stage="8">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 08</span><span class="file-chip">pantalla_productos.dart</span></div>
+      <h2>Validar el precio</h2>
+    </div>
+    <p>Ahora reemplaza el campo del precio por este:</p>
+    <div class="code" data-raw="TextFormField(
+  controller: precioController,
+  keyboardType: const TextInputType.numberWithOptions(
+    decimal: true,
+  ),
+  decoration: const InputDecoration(
+    labelText: &#x27;Precio&#x27;,
+    border: OutlineInputBorder(),
+  ),
+  validator: (valor) {
+    if (valor == null || valor.trim().isEmpty) {
+      return &#x27;Escribe el precio&#x27;;
+    }
+
+    final precio = double.tryParse(
+      valor.trim().replaceAll(&#x27;,&#x27;, &#x27;.&#x27;),
+    );
+
+    if (precio == null || !precio.isFinite || precio &lt;= 0) {
+      return &#x27;Escribe un precio válido mayor que cero&#x27;;
+    }
+
+    return null;
+  },
+),"><div class="code-head"><span class="code-file">campo del precio</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="n">TextFormField</span><span class="p">(</span></span><span class="ln"><span class="w">  </span><span class="nl">controller:</span><span class="w"> </span><span class="n">precioController</span><span class="p">,</span></span><span class="ln hl"><span class="w">  </span><span class="nl">keyboardType:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TextInputType</span><span class="p">.</span><span class="n">numberWithOptions</span><span class="p">(</span></span><span class="ln hl"><span class="w">    </span><span class="nl">decimal:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span></span><span class="ln hl"><span class="w">  </span><span class="p">),</span></span><span class="ln"><span class="w">  </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">    </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Precio'</span><span class="p">,</span></span><span class="ln"><span class="w">    </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">  </span><span class="p">),</span></span><span class="ln"><span class="w">  </span><span class="nl">validator:</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">().</span><span class="n">isEmpty</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe el precio'</span><span class="p">;</span></span><span class="ln"><span class="w">    </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">    </span><span class="kd">final</span><span class="w"> </span><span class="n">precio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">.</span><span class="n">tryParse</span><span class="p">(</span></span><span class="ln hl"><span class="w">      </span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">().</span><span class="n">replaceAll</span><span class="p">(</span><span class="s1">','</span><span class="p">,</span><span class="w"> </span><span class="s1">'.'</span><span class="p">),</span></span><span class="ln hl"><span class="w">    </span><span class="p">);</span></span><span class="ln hl">&#8203;</span><span class="ln"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">precio</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">precio</span><span class="p">.</span><span class="n">isFinite</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">precio</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln hl"><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe un precio válido mayor que cero'</span><span class="p">;</span></span><span class="ln"><span class="w">    </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span></span><span class="ln"><span class="w">  </span><span class="p">},</span></span><span class="ln"><span class="p">),</span></span></pre></div>
+    <h3>¿Qué conceptos nuevos aparecen?</h3>
+    <div class="defs">
+      <div class="def"><code>keyboardType</code>Sugiere un teclado numérico. Sin embargo, no garantiza que el usuario ingrese un número válido.</div>
+      <div class="def"><code>double.tryParse()</code>Intenta convertir el texto a un número decimal. Si no puede, devuelve <code>null</code>.</div>
+      <div class="def"><code>replaceAll(',', '.')</code>Cambia la coma por punto, para que <b>85,5</b> se lea como 85.5.</div>
+      <div class="def"><code>precio &lt;= 0</code>Impide aceptar precios iguales a cero o negativos.</div>
+    </div>
+    <div class="samples" aria-label="Ejemplos de double.tryParse">
+      <button type="button" class="sample yes" data-lab="85000"><code>"85000"</code><span class="r">→ 85000.0</span></button>
+      <button type="button" class="sample no" data-lab="abc"><code>"abc"</code><span class="r">→ null</span></button>
+    </div>
+    <p>De esta manera, el precio debe ser numérico, finito y mayor que cero. Toca un ejemplo para verlo paso a paso en el laboratorio del paso 9.</p>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="8" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-9">Paso 9: Validar la cantidad →</a></div>
+  </section>
+
+  <!-- PASO 9 -->
+  <section class="step" id="paso-9" data-stage="9">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 09</span><span class="file-chip">pantalla_productos.dart</span></div>
+      <h2>Validar la cantidad</h2>
+    </div>
+    <p>Reemplaza el campo de cantidad por este código:</p>
+    <div class="code" data-raw="TextFormField(
+  controller: cantidadController,
+  keyboardType: TextInputType.number,
+  decoration: const InputDecoration(
+    labelText: &#x27;Cantidad&#x27;,
+    border: OutlineInputBorder(),
+  ),
+  validator: (valor) {
+    if (valor == null || valor.trim().isEmpty) {
+      return &#x27;Escribe la cantidad&#x27;;
+    }
+
+    final cantidad = int.tryParse(valor.trim());
+
+    if (cantidad == null || cantidad &lt;= 0) {
+      return &#x27;Escribe una cantidad entera mayor que cero&#x27;;
+    }
+
+    return null;
+  },
+),"><div class="code-head"><span class="code-file">campo de la cantidad</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="n">TextFormField</span><span class="p">(</span></span><span class="ln"><span class="w">  </span><span class="nl">controller:</span><span class="w"> </span><span class="n">cantidadController</span><span class="p">,</span></span><span class="ln hl"><span class="w">  </span><span class="nl">keyboardType:</span><span class="w"> </span><span class="n">TextInputType</span><span class="p">.</span><span class="n">number</span><span class="p">,</span></span><span class="ln"><span class="w">  </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">    </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Cantidad'</span><span class="p">,</span></span><span class="ln"><span class="w">    </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">  </span><span class="p">),</span></span><span class="ln"><span class="w">  </span><span class="nl">validator:</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">().</span><span class="n">isEmpty</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe la cantidad'</span><span class="p">;</span></span><span class="ln"><span class="w">    </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">    </span><span class="kd">final</span><span class="w"> </span><span class="n">cantidad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">int</span><span class="p">.</span><span class="n">tryParse</span><span class="p">(</span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">());</span></span><span class="ln hl">&#8203;</span><span class="ln"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">cantidad</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">cantidad</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln hl"><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe una cantidad entera mayor que cero'</span><span class="p">;</span></span><span class="ln"><span class="w">    </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span></span><span class="ln"><span class="w">  </span><span class="p">},</span></span><span class="ln"><span class="p">),</span></span></pre></div>
+    <p>Aquí utilizamos <code>int.tryParse()</code> porque la cantidad debe ser un número <b>entero</b>. Por ejemplo:</p>
+    <div class="samples" aria-label="Ejemplos de cantidad">
+      <button type="button" class="sample yes" data-lab="10"><code>10</code><span class="r">válido</span></button>
+      <button type="button" class="sample no" data-lab="0"><code>0</code><span class="r">no válido</span></button>
+      <button type="button" class="sample no" data-lab="-3"><code>-3</code><span class="r">no válido</span></button>
+      <button type="button" class="sample no" data-lab="2.5"><code>2.5</code><span class="r">no válido</span></button>
+      <button type="button" class="sample no" data-lab="abc"><code>abc</code><span class="r">no válido</span></button>
+    </div>
+
+    <div class="lab" id="laboratorio">
+      <div class="lab-title"><span class="badge">Laboratorio</span><h3>¿Cómo lee Flutter lo que escribes?</h3></div>
+      <p style="font-size:15.5px">Escribe cualquier valor y mira qué hacen los validadores del precio y de la cantidad, línea por línea.</p>
+      <div>
+        <label for="lab-input">Valor escrito en el campo</label>
+        <input id="lab-input" type="text" value="85.000" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="samples">
+        <button type="button" class="sample" data-lab="85000"><code>85000</code></button>
+        <button type="button" class="sample" data-lab="85.000"><code>85.000</code></button>
+        <button type="button" class="sample" data-lab="85,5"><code>85,5</code></button>
+        <button type="button" class="sample" data-lab=" 12 "><code>␣12␣</code></button>
+        <button type="button" class="sample" data-lab="2.5"><code>2.5</code></button>
+        <button type="button" class="sample" data-lab="-3"><code>-3</code></button>
+        <button type="button" class="sample" data-lab="Infinity"><code>Infinity</code></button>
+        <button type="button" class="sample" data-lab=""><code>(vacío)</code></button>
+      </div>
+      <div class="lab-out" aria-live="polite">
+        <div class="lab-card"><h4>Validador del precio</h4><div class="trace" id="lab-precio"></div><div class="verdict" id="lab-precio-v"></div></div>
+        <div class="lab-card"><h4>Validador de la cantidad</h4><div class="trace" id="lab-cantidad"></div><div class="verdict" id="lab-cantidad-v"></div></div>
+      </div>
+      <div class="note warn" style="background: var(--surface)">
+        <svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+        <div><b class="t">Ojo con los precios en pesos</b><p>Si alguien escribe <b>85.000</b> pensando en ochenta y cinco mil, <code>double.tryParse</code> lo lee como <b>85.0</b> y el validador lo acepta. Un buen texto de ayuda evita el error: por ejemplo, <code>hintText: 'Sin puntos, ej. 85000'</code> en el <code>InputDecoration</code>.</p></div>
+      </div>
+    </div>
+
+    <p>Hasta aquí hemos creado las reglas para los tres campos. Falta conectar el formulario con el botón para que Flutter ejecute las validaciones.</p>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="9" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-10">Paso 10: Agrupar en Form →</a></div>
+  </section>
+
+  <!-- PASO 10 -->
+  <section class="step" id="paso-10" data-stage="10">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 10</span><span class="file-chip">pantalla_productos.dart</span></div>
+      <h2>Agrupar los campos dentro de Form</h2>
+    </div>
+    <p>Para que Flutter pueda validar los tres campos juntos, debemos envolver el <code>Column</code> con un <code>Form</code>. En el método <code>build()</code>, cambia esta parte:</p>
+    <div class="code" data-raw="body: Padding(
+  padding: const EdgeInsets.all(16),
+  child: Column(
+    children: [
+      // Aquí están los campos y el botón.
+    ],
+  ),
+),"><div class="code-head"><span class="code-file">antes</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="nl">body:</span><span class="w"> </span><span class="n">Padding</span><span class="p">(</span></span><span class="ln"><span class="w">  </span><span class="nl">padding:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">EdgeInsets</span><span class="p">.</span><span class="n">all</span><span class="p">(</span><span class="m">16</span><span class="p">),</span></span><span class="ln"><span class="w">  </span><span class="nl">child:</span><span class="w"> </span><span class="n">Column</span><span class="p">(</span></span><span class="ln"><span class="w">    </span><span class="nl">children:</span><span class="w"> </span><span class="p">[</span></span><span class="ln"><span class="w">      </span><span class="c1">// Aquí están los campos y el botón.</span></span><span class="ln"><span class="w">    </span><span class="p">],</span></span><span class="ln"><span class="w">  </span><span class="p">),</span></span><span class="ln"><span class="p">),</span></span></pre></div>
+    <p>Por esta estructura:</p>
+    <div class="code" data-raw="body: Padding(
+  padding: const EdgeInsets.all(16),
+  child: Form(
+    key: formularioKey,
+    child: Column(
+      children: [
+        // Aquí están los tres TextFormField.
+        // Aquí está el botón.
+      ],
+    ),
+  ),
+),"><div class="code-head"><span class="code-file">después</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="nl">body:</span><span class="w"> </span><span class="n">Padding</span><span class="p">(</span></span><span class="ln"><span class="w">  </span><span class="nl">padding:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">EdgeInsets</span><span class="p">.</span><span class="n">all</span><span class="p">(</span><span class="m">16</span><span class="p">),</span></span><span class="ln hl"><span class="w">  </span><span class="nl">child:</span><span class="w"> </span><span class="n">Form</span><span class="p">(</span></span><span class="ln hl"><span class="w">    </span><span class="nl">key:</span><span class="w"> </span><span class="n">formularioKey</span><span class="p">,</span></span><span class="ln"><span class="w">    </span><span class="nl">child:</span><span class="w"> </span><span class="n">Column</span><span class="p">(</span></span><span class="ln"><span class="w">      </span><span class="nl">children:</span><span class="w"> </span><span class="p">[</span></span><span class="ln"><span class="w">        </span><span class="c1">// Aquí están los tres TextFormField.</span></span><span class="ln"><span class="w">        </span><span class="c1">// Aquí está el botón.</span></span><span class="ln"><span class="w">      </span><span class="p">],</span></span><span class="ln"><span class="w">    </span><span class="p">),</span></span><span class="ln hl"><span class="w">  </span><span class="p">),</span></span><span class="ln"><span class="p">),</span></span></pre></div>
+    <p>No tienes que volver a escribir los campos: simplemente deben quedar dentro del <code>Column</code>, que ahora está dentro de <code>Form</code>. La propiedad:</p>
+    <div class="code short" data-raw="key: formularioKey,"><div class="code-head"><span class="code-file">dentro de Form</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="nl">key:</span><span class="w"> </span><span class="n">formularioKey</span><span class="p">,</span></span></pre></div>
+    <p>conecta el formulario con la llave que creamos en el paso 6.</p>
+    <div class="note info">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+      <p>Truco de VS Code: pon el cursor sobre <code>Column</code>, pulsa <kbd>Ctrl</kbd> + <kbd>.</kbd> y elige <b>Wrap with widget…</b>. Luego cambia <code>widget</code> por <code>Form</code> y agrega la <code>key</code>.</p>
+    </div>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="10" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-11">Paso 11: Conectar el botón →</a></div>
+  </section>
+
+  <!-- PASO 11 -->
+  <section class="step" id="paso-11" data-stage="11">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 11</span><span class="file-chip">pantalla_productos.dart</span></div>
+      <h2>Hacer que el botón valide los campos</h2>
+    </div>
+    <p>Primero, agrega este método dentro de <code>_PantallaProductosState</code>, antes de <code>build()</code>:</p>
+    <div class="code" data-raw="void validarFormulario() {
+  if (formularioKey.currentState!.validate()) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(&#x27;Todos los campos son válidos&#x27;),
+      ),
+    );
+  }
+}"><div class="code-head"><span class="code-file">dentro de _PantallaProductosState, antes de build()</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="kt">void</span><span class="w"> </span><span class="n">validarFormulario</span><span class="p">()</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">formularioKey</span><span class="p">.</span><span class="n">currentState</span><span class="o">!</span><span class="p">.</span><span class="n">validate</span><span class="p">())</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="n">ScaffoldMessenger</span><span class="p">.</span><span class="n">of</span><span class="p">(</span><span class="n">context</span><span class="p">).</span><span class="n">showSnackBar</span><span class="p">(</span></span><span class="ln"><span class="w">      </span><span class="k">const</span><span class="w"> </span><span class="n">SnackBar</span><span class="p">(</span></span><span class="ln"><span class="w">        </span><span class="nl">content:</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s1">'Todos los campos son válidos'</span><span class="p">),</span></span><span class="ln"><span class="w">      </span><span class="p">),</span></span><span class="ln"><span class="w">    </span><span class="p">);</span></span><span class="ln"><span class="w">  </span><span class="p">}</span></span><span class="ln"><span class="p">}</span></span></pre></div>
+    <p>Después, conecta el botón con el método:</p>
+    <div class="code" data-raw="ElevatedButton(
+  onPressed: validarFormulario,
+  child: const Text(&#x27;Validar formulario&#x27;),
+),"><div class="code-head"><span class="code-file">el botón</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="n">ElevatedButton</span><span class="p">(</span></span><span class="ln hl"><span class="w">  </span><span class="nl">onPressed:</span><span class="w"> </span><span class="n">validarFormulario</span><span class="p">,</span></span><span class="ln"><span class="w">  </span><span class="nl">child:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s1">'Validar formulario'</span><span class="p">),</span></span><span class="ln"><span class="p">),</span></span></pre></div>
+    <h3>¿Qué sucede cuando pulsamos el botón?</h3>
+    <p>La instrucción más importante es:</p>
+    <div class="code short" data-raw="formularioKey.currentState!.validate()"><div class="code-head"><span class="code-file">la instrucción clave</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="n">formularioKey</span><span class="p">.</span><span class="n">currentState</span><span class="o">!</span><span class="p">.</span><span class="n">validate</span><span class="p">()</span></span></pre></div>
+    <div class="flow">
+      <div class="box"><small>1 · onPressed</small>El usuario pulsa «Validar formulario».</div>
+      <div class="box"><small>2 · validarFormulario()</small>Se pide al formulario, mediante su llave, que se valide.</div>
+      <div class="box"><small>3 · validate()</small>Flutter ejecuta el <b>validator</b> de cada campo del formulario.</div>
+    </div>
+    <div class="branch">
+      <div class="box bad"><b>Algún campo es incorrecto</b>Devuelve <code>false</code> y muestra los mensajes de error debajo de los campos.</div>
+      <div class="box good"><b>Todos los campos son correctos</b>Devuelve <code>true</code> y aparece el SnackBar «Todos los campos son válidos».</div>
+    </div>
+    <div class="note info">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+      <p>Todavía no estamos guardando productos. Por ahora solo comprobamos que los datos sean válidos. Pruébalo ya en el teléfono: deja un campo vacío y pulsa el botón.</p>
+    </div>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="11" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#paso-12">Paso 12: Probar lo aprendido →</a></div>
+  </section>
+
+  <!-- PASO 12 -->
+  <section class="step" id="paso-12" data-stage="12">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">PASO 12</span></div>
+      <h2>Probar lo aprendido</h2>
+    </div>
+    <p>Ejecuta la aplicación y realiza estas pruebas. Con <b>Cargar en el teléfono</b> puedes verlas primero en la simulación.</p>
+    <div class="checklist">
+      <div class="check-item"><input type="checkbox" id="t1" data-test="1"><label for="t1"><b>Pulsa el botón con todos los campos vacíos.</b><span>Los tres campos deben mostrar mensajes de error.</span></label><button type="button" class="try-btn" data-try="1">Cargar en el teléfono</button></div>
+      <div class="check-item"><input type="checkbox" id="t2" data-test="2"><label for="t2"><b>Escribe un nombre, un precio de 85000 y una cantidad de 10.</b><span>Debe aparecer «Todos los campos son válidos».</span></label><button type="button" class="try-btn" data-try="2">Cargar en el teléfono</button></div>
+      <div class="check-item"><input type="checkbox" id="t3" data-test="3"><label for="t3"><b>Escribe letras en el precio.</b><span>El campo del precio debe mostrar un error.</span></label><button type="button" class="try-btn" data-try="3">Cargar en el teléfono</button></div>
+      <div class="check-item"><input type="checkbox" id="t4" data-test="4"><label for="t4"><b>Escribe una cantidad de 2.5.</b><span>El campo de cantidad debe rechazar el valor.</span></label><button type="button" class="try-btn" data-try="4">Cargar en el teléfono</button></div>
+    </div>
+    <p><span class="check-count" id="test-count">0 de 4</span> pruebas comprobadas.</p>
+    <div class="step-foot"><button type="button" class="done-btn" data-done-btn="12" aria-pressed="false"><span class="box"></span><span class="lbl">Marcar como hecho</span></button><a class="next-link" href="#codigo-completo">Ver el código completo →</a></div>
+  </section>
+
+  <!-- CÓDIGO COMPLETO -->
+  <section class="step" id="codigo-completo" data-stage="12">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">REFERENCIA</span></div>
+      <h2>Código completo</h2>
+    </div>
+    <p>Así deben quedar tus dos archivos al terminar. Úsalo para comparar si algo no funciona.</p>
+    <div class="tabs" role="tablist" aria-label="Archivos">
+      <button type="button" class="tab" role="tab" id="tab-p" aria-controls="panel-p" aria-selected="true">pantalla_productos.dart</button>
+      <button type="button" class="tab" role="tab" id="tab-m" aria-controls="panel-m" aria-selected="false" tabindex="-1">main.dart</button>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="panel-p" aria-labelledby="tab-p"><div class="code" data-raw="import &#x27;package:flutter/material.dart&#x27;;
+
+class PantallaProductos extends StatefulWidget {
+  const PantallaProductos({super.key});
+
+  @override
+  State&lt;PantallaProductos&gt; createState() {
+    return _PantallaProductosState();
+  }
+}
+
+class _PantallaProductosState
+    extends State&lt;PantallaProductos&gt; {
+  final formularioKey = GlobalKey&lt;FormState&gt;();
+
+  final nombreController = TextEditingController();
+  final precioController = TextEditingController();
+  final cantidadController = TextEditingController();
+
+  @override
+  void dispose() {
+    nombreController.dispose();
+    precioController.dispose();
+    cantidadController.dispose();
+
+    super.dispose();
+  }
+
+  void validarFormulario() {
+    if (formularioKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(&#x27;Todos los campos son válidos&#x27;),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(&#x27;Inventario de productos&#x27;),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: formularioKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: nombreController,
+                decoration: const InputDecoration(
+                  labelText: &#x27;Nombre del producto&#x27;,
+                  border: OutlineInputBorder(),
+                ),
+                validator: (valor) {
+                  if (valor == null || valor.trim().isEmpty) {
+                    return &#x27;Escribe el nombre del producto&#x27;;
+                  }
+
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: precioController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: &#x27;Precio&#x27;,
+                  border: OutlineInputBorder(),
+                ),
+                validator: (valor) {
+                  if (valor == null || valor.trim().isEmpty) {
+                    return &#x27;Escribe el precio&#x27;;
+                  }
+
+                  final precio = double.tryParse(
+                    valor.trim().replaceAll(&#x27;,&#x27;, &#x27;.&#x27;),
+                  );
+
+                  if (precio == null || !precio.isFinite || precio &lt;= 0) {
+                    return &#x27;Escribe un precio válido mayor que cero&#x27;;
+                  }
+
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: cantidadController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: &#x27;Cantidad&#x27;,
+                  border: OutlineInputBorder(),
+                ),
+                validator: (valor) {
+                  if (valor == null || valor.trim().isEmpty) {
+                    return &#x27;Escribe la cantidad&#x27;;
+                  }
+
+                  final cantidad = int.tryParse(valor.trim());
+
+                  if (cantidad == null || cantidad &lt;= 0) {
+                    return &#x27;Escribe una cantidad entera mayor que cero&#x27;;
+                  }
+
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              ElevatedButton(
+                onPressed: validarFormulario,
+                child: const Text(&#x27;Validar formulario&#x27;),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}"><div class="code-head"><span class="code-file">lib/screens/pantalla_productos.dart</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="k">import</span><span class="w"> </span><span class="s1">'package:flutter/material.dart'</span><span class="p">;</span></span><span class="ln">&#8203;</span><span class="ln"><span class="kd">class</span><span class="w"> </span><span class="nc">PantallaProductos</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">StatefulWidget</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">PantallaProductos</span><span class="p">({</span><span class="k">super</span><span class="p">.</span><span class="n">key</span><span class="p">});</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="nd">@override</span></span><span class="ln"><span class="w">  </span><span class="n">State</span><span class="o">&lt;</span><span class="n">PantallaProductos</span><span class="o">&gt;</span><span class="w"> </span><span class="n">createState</span><span class="p">()</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">_PantallaProductosState</span><span class="p">();</span></span><span class="ln"><span class="w">  </span><span class="p">}</span></span><span class="ln"><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="kd">class</span><span class="w"> </span><span class="nc">_PantallaProductosState</span></span><span class="ln"><span class="w">    </span><span class="kd">extends</span><span class="w"> </span><span class="n">State</span><span class="o">&lt;</span><span class="n">PantallaProductos</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="kd">final</span><span class="w"> </span><span class="n">formularioKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GlobalKey</span><span class="o">&lt;</span><span class="n">FormState</span><span class="o">&gt;</span><span class="p">();</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="kd">final</span><span class="w"> </span><span class="n">nombreController</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TextEditingController</span><span class="p">();</span></span><span class="ln"><span class="w">  </span><span class="kd">final</span><span class="w"> </span><span class="n">precioController</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TextEditingController</span><span class="p">();</span></span><span class="ln"><span class="w">  </span><span class="kd">final</span><span class="w"> </span><span class="n">cantidadController</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TextEditingController</span><span class="p">();</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="nd">@override</span></span><span class="ln"><span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">dispose</span><span class="p">()</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="n">nombreController</span><span class="p">.</span><span class="n">dispose</span><span class="p">();</span></span><span class="ln"><span class="w">    </span><span class="n">precioController</span><span class="p">.</span><span class="n">dispose</span><span class="p">();</span></span><span class="ln"><span class="w">    </span><span class="n">cantidadController</span><span class="p">.</span><span class="n">dispose</span><span class="p">();</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">    </span><span class="k">super</span><span class="p">.</span><span class="n">dispose</span><span class="p">();</span></span><span class="ln"><span class="w">  </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">validarFormulario</span><span class="p">()</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">formularioKey</span><span class="p">.</span><span class="n">currentState</span><span class="o">!</span><span class="p">.</span><span class="n">validate</span><span class="p">())</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">      </span><span class="n">ScaffoldMessenger</span><span class="p">.</span><span class="n">of</span><span class="p">(</span><span class="n">context</span><span class="p">).</span><span class="n">showSnackBar</span><span class="p">(</span></span><span class="ln"><span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="n">SnackBar</span><span class="p">(</span></span><span class="ln"><span class="w">          </span><span class="nl">content:</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s1">'Todos los campos son válidos'</span><span class="p">),</span></span><span class="ln"><span class="w">        </span><span class="p">),</span></span><span class="ln"><span class="w">      </span><span class="p">);</span></span><span class="ln"><span class="w">    </span><span class="p">}</span></span><span class="ln"><span class="w">  </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="nd">@override</span></span><span class="ln"><span class="w">  </span><span class="n">Widget</span><span class="w"> </span><span class="n">build</span><span class="p">(</span><span class="n">BuildContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Scaffold</span><span class="p">(</span></span><span class="ln"><span class="w">      </span><span class="nl">appBar:</span><span class="w"> </span><span class="n">AppBar</span><span class="p">(</span></span><span class="ln"><span class="w">        </span><span class="nl">title:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s1">'Inventario de productos'</span><span class="p">),</span></span><span class="ln"><span class="w">      </span><span class="p">),</span></span><span class="ln"><span class="w">      </span><span class="nl">body:</span><span class="w"> </span><span class="n">Padding</span><span class="p">(</span></span><span class="ln"><span class="w">        </span><span class="nl">padding:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">EdgeInsets</span><span class="p">.</span><span class="n">all</span><span class="p">(</span><span class="m">16</span><span class="p">),</span></span><span class="ln"><span class="w">        </span><span class="nl">child:</span><span class="w"> </span><span class="n">Form</span><span class="p">(</span></span><span class="ln"><span class="w">          </span><span class="nl">key:</span><span class="w"> </span><span class="n">formularioKey</span><span class="p">,</span></span><span class="ln"><span class="w">          </span><span class="nl">child:</span><span class="w"> </span><span class="n">Column</span><span class="p">(</span></span><span class="ln"><span class="w">            </span><span class="nl">children:</span><span class="w"> </span><span class="p">[</span></span><span class="ln"><span class="w">              </span><span class="n">TextFormField</span><span class="p">(</span></span><span class="ln"><span class="w">                </span><span class="nl">controller:</span><span class="w"> </span><span class="n">nombreController</span><span class="p">,</span></span><span class="ln"><span class="w">                </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">                  </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Nombre del producto'</span><span class="p">,</span></span><span class="ln"><span class="w">                  </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">                </span><span class="p">),</span></span><span class="ln"><span class="w">                </span><span class="nl">validator:</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">                  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">().</span><span class="n">isEmpty</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe el nombre del producto'</span><span class="p">;</span></span><span class="ln"><span class="w">                  </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">                  </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span></span><span class="ln"><span class="w">                </span><span class="p">},</span></span><span class="ln"><span class="w">              </span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">              </span><span class="k">const</span><span class="w"> </span><span class="n">SizedBox</span><span class="p">(</span><span class="nl">height:</span><span class="w"> </span><span class="m">12</span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">              </span><span class="n">TextFormField</span><span class="p">(</span></span><span class="ln"><span class="w">                </span><span class="nl">controller:</span><span class="w"> </span><span class="n">precioController</span><span class="p">,</span></span><span class="ln"><span class="w">                </span><span class="nl">keyboardType:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TextInputType</span><span class="p">.</span><span class="n">numberWithOptions</span><span class="p">(</span></span><span class="ln"><span class="w">                  </span><span class="nl">decimal:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span></span><span class="ln"><span class="w">                </span><span class="p">),</span></span><span class="ln"><span class="w">                </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">                  </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Precio'</span><span class="p">,</span></span><span class="ln"><span class="w">                  </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">                </span><span class="p">),</span></span><span class="ln"><span class="w">                </span><span class="nl">validator:</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">                  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">().</span><span class="n">isEmpty</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe el precio'</span><span class="p">;</span></span><span class="ln"><span class="w">                  </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">                  </span><span class="kd">final</span><span class="w"> </span><span class="n">precio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">double</span><span class="p">.</span><span class="n">tryParse</span><span class="p">(</span></span><span class="ln"><span class="w">                    </span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">().</span><span class="n">replaceAll</span><span class="p">(</span><span class="s1">','</span><span class="p">,</span><span class="w"> </span><span class="s1">'.'</span><span class="p">),</span></span><span class="ln"><span class="w">                  </span><span class="p">);</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">                  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">precio</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">precio</span><span class="p">.</span><span class="n">isFinite</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">precio</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe un precio válido mayor que cero'</span><span class="p">;</span></span><span class="ln"><span class="w">                  </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">                  </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span></span><span class="ln"><span class="w">                </span><span class="p">},</span></span><span class="ln"><span class="w">              </span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">              </span><span class="k">const</span><span class="w"> </span><span class="n">SizedBox</span><span class="p">(</span><span class="nl">height:</span><span class="w"> </span><span class="m">12</span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">              </span><span class="n">TextFormField</span><span class="p">(</span></span><span class="ln"><span class="w">                </span><span class="nl">controller:</span><span class="w"> </span><span class="n">cantidadController</span><span class="p">,</span></span><span class="ln"><span class="w">                </span><span class="nl">keyboardType:</span><span class="w"> </span><span class="n">TextInputType</span><span class="p">.</span><span class="n">number</span><span class="p">,</span></span><span class="ln"><span class="w">                </span><span class="nl">decoration:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">InputDecoration</span><span class="p">(</span></span><span class="ln"><span class="w">                  </span><span class="nl">labelText:</span><span class="w"> </span><span class="s1">'Cantidad'</span><span class="p">,</span></span><span class="ln"><span class="w">                  </span><span class="nl">border:</span><span class="w"> </span><span class="n">OutlineInputBorder</span><span class="p">(),</span></span><span class="ln"><span class="w">                </span><span class="p">),</span></span><span class="ln"><span class="w">                </span><span class="nl">validator:</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">                  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">valor</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">().</span><span class="n">isEmpty</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe la cantidad'</span><span class="p">;</span></span><span class="ln"><span class="w">                  </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">                  </span><span class="kd">final</span><span class="w"> </span><span class="n">cantidad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">int</span><span class="p">.</span><span class="n">tryParse</span><span class="p">(</span><span class="n">valor</span><span class="p">.</span><span class="n">trim</span><span class="p">());</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">                  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">cantidad</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">cantidad</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="s1">'Escribe una cantidad entera mayor que cero'</span><span class="p">;</span></span><span class="ln"><span class="w">                  </span><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">                  </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span></span><span class="ln"><span class="w">                </span><span class="p">},</span></span><span class="ln"><span class="w">              </span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">              </span><span class="k">const</span><span class="w"> </span><span class="n">SizedBox</span><span class="p">(</span><span class="nl">height:</span><span class="w"> </span><span class="m">16</span><span class="p">),</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">              </span><span class="n">ElevatedButton</span><span class="p">(</span></span><span class="ln"><span class="w">                </span><span class="nl">onPressed:</span><span class="w"> </span><span class="n">validarFormulario</span><span class="p">,</span></span><span class="ln"><span class="w">                </span><span class="nl">child:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s1">'Validar formulario'</span><span class="p">),</span></span><span class="ln"><span class="w">              </span><span class="p">),</span></span><span class="ln"><span class="w">            </span><span class="p">],</span></span><span class="ln"><span class="w">          </span><span class="p">),</span></span><span class="ln"><span class="w">        </span><span class="p">),</span></span><span class="ln"><span class="w">      </span><span class="p">),</span></span><span class="ln"><span class="w">    </span><span class="p">);</span></span><span class="ln"><span class="w">  </span><span class="p">}</span></span><span class="ln"><span class="p">}</span></span></pre></div></div>
+    <div class="tabpanel" role="tabpanel" id="panel-m" aria-labelledby="tab-m" hidden><div class="code" data-raw="import &#x27;package:flutter/material.dart&#x27;;
+import &#x27;screens/pantalla_productos.dart&#x27;;
+
+void main() {
+  runApp(const MiAplicacion());
+}
+
+class MiAplicacion extends StatelessWidget {
+  const MiAplicacion({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: &#x27;Inventario de productos&#x27;,
+      home: const PantallaProductos(),
+    );
+  }
+}"><div class="code-head"><span class="code-file">lib/main.dart</span><button type="button" class="copy" data-copy aria-label="Copiar código"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg><span>Copiar</span></button></div><pre><span class="ln"><span class="k">import</span><span class="w"> </span><span class="s1">'package:flutter/material.dart'</span><span class="p">;</span></span><span class="ln"><span class="k">import</span><span class="w"> </span><span class="s1">'screens/pantalla_productos.dart'</span><span class="p">;</span></span><span class="ln">&#8203;</span><span class="ln"><span class="kt">void</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="n">runApp</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">MiAplicacion</span><span class="p">());</span></span><span class="ln"><span class="p">}</span></span><span class="ln">&#8203;</span><span class="ln"><span class="kd">class</span><span class="w"> </span><span class="nc">MiAplicacion</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">StatelessWidget</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">MiAplicacion</span><span class="p">({</span><span class="k">super</span><span class="p">.</span><span class="n">key</span><span class="p">});</span></span><span class="ln">&#8203;</span><span class="ln"><span class="w">  </span><span class="nd">@override</span></span><span class="ln"><span class="w">  </span><span class="n">Widget</span><span class="w"> </span><span class="n">build</span><span class="p">(</span><span class="n">BuildContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span><span class="ln"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">MaterialApp</span><span class="p">(</span></span><span class="ln"><span class="w">      </span><span class="nl">debugShowCheckedModeBanner:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span></span><span class="ln"><span class="w">      </span><span class="nl">title:</span><span class="w"> </span><span class="s1">'Inventario de productos'</span><span class="p">,</span></span><span class="ln"><span class="w">      </span><span class="nl">home:</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">PantallaProductos</span><span class="p">(),</span></span><span class="ln"><span class="w">    </span><span class="p">);</span></span><span class="ln"><span class="w">  </span><span class="p">}</span></span><span class="ln"><span class="p">}</span></span></pre></div></div>
+  </section>
+
+  <!-- RESUMEN -->
+  <section class="step" id="resumen" data-stage="12">
+    <div class="step-head">
+      <div class="step-top"><span class="step-num">RESUMEN</span></div>
+      <h2>¿Qué aprendiste hasta aquí?</h2>
+    </div>
+    <p>Ya sabes construir una pantalla, crear campos de texto, leer lo que escribe el usuario y validar un formulario. Los cuatro conceptos fundamentales son:</p>
+    <div class="concepts">
+      <div class="concept"><code>TextEditingController</code>Permite leer el texto de los campos.</div>
+      <div class="concept"><code>Form</code>Agrupa los campos que se validarán.</div>
+      <div class="concept"><code>validator</code>Define las reglas de cada campo.</div>
+      <div class="concept"><code>validate()</code>Ejecuta las reglas y determina si el formulario es válido.</div>
+    </div>
+    <div class="next-part">
+      <h3>Lo que sigue: parte 2</h3>
+      <p>El siguiente paso será guardar los datos validados en una lista y mostrar los productos registrados en pantalla. Así podremos continuar sobre esta misma aplicación sin volver a empezar.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ================= PHONE ================= -->
+<aside class="aside" id="simulador" aria-label="Simulación de la aplicación">
+  <button type="button" class="sheet-close" data-close>Cerrar</button>
+  <div class="sim-label" style="width:300px"><span>Tu app</span><span class="live" id="sim-step">Paso 12</span></div>
+  <div class="phone">
+    <div class="screen">
+      <div class="sb"><span>9:41</span><span class="cam"></span><span class="ic"><i style="width:14px;height:9px"></i><i style="width:20px;height:10px;border-radius:2px"></i></span></div>
+      <div class="appbar">Inventario de productos</div>
+      <div class="body">
+        <div class="ph-center" id="ph-center">Aquí construiremos el formulario</div>
+        <form class="ph-form" id="ph-form" novalidate>
+          <div class="fld" id="f-nombre"><input id="ph-nombre" placeholder=" " autocomplete="off"><label for="ph-nombre">Nombre del producto</label><div class="err"></div></div>
+          <div class="gap12"></div>
+          <div class="fld" id="f-precio"><input id="ph-precio" placeholder=" " autocomplete="off"><label for="ph-precio">Precio</label><div class="err"></div></div>
+          <div class="gap12"></div>
+          <div class="fld" id="f-cantidad"><input id="ph-cantidad" placeholder=" " autocomplete="off"><label for="ph-cantidad">Cantidad</label><div class="err"></div></div>
+          <div class="gap16"></div>
+          <button type="submit" class="m3-btn" id="ph-btn">Validar formulario</button>
+        </form>
+      </div>
+      <div class="snack" id="ph-snack" role="status">Todos los campos son válidos</div>
+      <div class="homebar"></div>
+    </div>
+  </div>
+  <div class="sim-panel">
+    <div class="sim-stage" id="sim-caption" aria-live="polite"></div>
+    <div class="seg" role="group" aria-label="Qué versión mostrar">
+      <button type="button" data-mode="follow" aria-pressed="false">Según mi paso</button>
+      <button type="button" data-mode="final" aria-pressed="true">App terminada</button>
+    </div>
+    <button type="button" class="link-btn" id="ph-reset">Vaciar los campos</button>
+  </div>
+</aside>
+</div>
+
+<button type="button" class="fab" data-open-phone aria-controls="simulador"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg>Ver la app</button>
+<div class="scrim" data-close></div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  /* ---------- Progreso de pasos ---------- */
+  const done = new Set(store.get('inv1-done', []));
+  function paintDone() {
+    $$('[data-done-btn]').forEach(b => {
+      const on = done.has(b.dataset.doneBtn);
+      b.setAttribute('aria-pressed', on);
+      b.querySelector('.lbl').textContent = on ? 'Paso completado' : 'Marcar como hecho';
+    });
+    $$('.nav-step').forEach(a => a.classList.toggle('is-done', done.has(a.dataset.step)));
+    const n = done.size;
+    $$('[data-progress-count]').forEach(e => e.textContent = n);
+    $$('[data-progress-bar]').forEach(e => e.style.width = (n / 12 * 100) + '%');
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-done-btn]');
+    if (!b) return;
+    const id = b.dataset.doneBtn;
+    done.has(id) ? done.delete(id) : done.add(id);
+    store.set('inv1-done', [...done]);
+    paintDone();
+  });
+  paintDone();
+
+  /* ---------- Copiar código ---------- */
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('[data-copy]');
+    if (!b) return;
+    const raw = b.closest('.code').dataset.raw;
+    let ok = false;
+    try { await navigator.clipboard.writeText(raw); ok = true; } catch (_) {
+      try {
+        const t = document.createElement('textarea');
+        t.value = raw; t.style.position = 'fixed'; t.style.opacity = '0';
+        document.body.appendChild(t); t.select(); ok = document.execCommand('copy'); t.remove();
+      } catch (_) {}
+    }
+    const label = b.querySelector('span');
+    b.classList.add(ok ? 'ok' : 'fail');
+    label.textContent = ok ? 'Copiado' : 'Selecciona y copia';
+    if (!ok) { const sel = getSelection(); const r = document.createRange(); r.selectNodeContents(b.closest('.code').querySelector('pre')); sel.removeAllRanges(); sel.addRange(r); }
+    setTimeout(() => { b.classList.remove('ok', 'fail'); label.textContent = 'Copiar'; }, 1800);
+  });
+
+  /* ---------- Pestañas ---------- */
+  const tabs = $$('.tab');
+  function selectTab(t) {
+    tabs.forEach(x => { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; $('#' + x.getAttribute('aria-controls')).hidden = !on; });
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => selectTab(t));
+    t.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; selectTab(n); n.focus(); }
+    });
+  });
+
+  /* ---------- Paneles en móvil ---------- */
+  const body = document.body;
+  const closeAll = () => body.classList.remove('nav-open', 'phone-open');
+  $('[data-open-nav]').addEventListener('click', () => body.classList.add('nav-open'));
+  $('[data-open-phone]').addEventListener('click', () => body.classList.add('phone-open'));
+  $$('[data-close]').forEach(b => b.addEventListener('click', closeAll));
+  $$('.nav a').forEach(a => a.addEventListener('click', () => body.classList.remove('nav-open')));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+  const phoneIsDrawer = () => matchMedia('(max-width: 1260px)').matches;
+
+  /* ---------- Simulación de Dart ---------- */
+  function dartDouble(s) {
+    if (!/^[+-]?(NaN|Infinity|(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)$/.test(s)) return null;
+    return Number(s.replace(/^\+/, ''));
+  }
+  function dartInt(s) {
+    if (/^[+-]?\d+$/.test(s)) { try { const b = BigInt(s); if (b > 9223372036854775807n || b < -9223372036854775808n) return null; } catch (e) { return null; } return Number(s); }
+    if (/^[+-]?0x[0-9a-fA-F]+$/.test(s)) { const neg = s.startsWith('-'); const n = parseInt(s.replace(/^[+-]?0x/, ''), 16); return neg ? -n : n; }
+    return null;
+  }
+  const fmtD = n => n === null ? 'null' : Number.isNaN(n) ? 'NaN' : !Number.isFinite(n) ? (n > 0 ? 'Infinity' : '-Infinity') : (Number.isInteger(n) && Math.abs(n) < 1e21 ? n + '.0' : String(n));
+  const q = s => '"' + s + '"';
+
+  function vNombre(v) { return v.trim() === '' ? 'Escribe el nombre del producto' : null; }
+  function vPrecio(v) {
+    if (v.trim() === '') return 'Escribe el precio';
+    const p = dartDouble(v.trim().replaceAll(',', '.'));
+    if (p === null || !Number.isFinite(p) || p <= 0) return 'Escribe un precio válido mayor que cero';
+    return null;
+  }
+  function vCantidad(v) {
+    if (v.trim() === '') return 'Escribe la cantidad';
+    const c = dartInt(v.trim());
+    if (c === null || c <= 0) return 'Escribe una cantidad entera mayor que cero';
+    return null;
+  }
+
+  /* ---------- Laboratorio ---------- */
+  const labIn = $('#lab-input');
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function runLab() {
+    const v = labIn.value;
+    const tP = [], tC = [];
+    tP.push(`valor = <b>${esc(q(v))}</b>`);
+    tC.push(`valor = <b>${esc(q(v))}</b>`);
+    if (v.trim() === '') {
+      tP.push('valor.trim().isEmpty → <b>true</b>');
+      tC.push('valor.trim().isEmpty → <b>true</b>');
+    } else {
+      const norm = v.trim().replaceAll(',', '.');
+      const p = dartDouble(norm);
+      tP.push(`trim + replaceAll → <b>${esc(q(norm))}</b>`);
+      tP.push(`double.tryParse → <b>${fmtD(p)}</b>`);
+      if (p !== null) tP.push(`isFinite: <b>${Number.isFinite(p)}</b> · mayor que 0: <b>${p > 0}</b>`);
+      const c = dartInt(v.trim());
+      tC.push(`valor.trim() → <b>${esc(q(v.trim()))}</b>`);
+      tC.push(`int.tryParse → <b>${c === null ? 'null' : c}</b>`);
+      if (c !== null) tC.push(`mayor que 0: <b>${c > 0}</b>`);
+    }
+    $('#lab-precio').innerHTML = tP.map(x => `<span>${x}</span>`).join('');
+    $('#lab-cantidad').innerHTML = tC.map(x => `<span>${x}</span>`).join('');
+    const eP = vPrecio(v), eC = vCantidad(v);
+    const set = (el, err) => { el.className = 'verdict ' + (err ? 'bad' : 'ok'); el.textContent = err ? '✕ ' + err : '✓ Válido (return null)'; };
+    set($('#lab-precio-v'), eP); set($('#lab-cantidad-v'), eC);
+  }
+  labIn.addEventListener('input', runLab);
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-lab]');
+    if (!b) return;
+    labIn.value = b.dataset.lab;
+    runLab();
+    if (!b.closest('.lab')) $('#laboratorio').scrollIntoView({ block: 'center' });
+    labIn.focus({ preventScroll: true });
+  });
+  runLab();
+
+  /* ---------- Teléfono ---------- */
+  const captions = {
+    0: ['Antes del paso 3', 'Así se verá la app cuando termines el paso 3.'],
+    3: ['Pantalla inicial', 'Barra superior y un mensaje centrado.'],
+    4: ['Campos sin reglas', 'Ya puedes escribir, pero el botón todavía no hace nada.'],
+    5: ['Con controladores', 'Cada campo tiene un controlador que permite leer su texto. A simple vista no cambia nada.'],
+    6: ['Reglas definidas', 'Ya conoces las reglas, pero todavía no están en el código.'],
+    7: ['El nombre tiene regla', 'La regla existe, pero el botón todavía no la ejecuta.'],
+    8: ['El precio tiene regla', 'En un teléfono real, el campo del precio abre el teclado numérico.'],
+    9: ['Tres reglas listas', 'Falta conectarlas al botón para que se ejecuten.'],
+    10: ['Campos dentro de Form', 'Solo falta que el botón llame a validate().'],
+    11: ['App funcionando', 'Pulsa «Validar formulario». Los errores se actualizan cada vez que lo pulsas, igual que en Flutter.']
+  };
+  const els = { center: $('#ph-center'), form: $('#ph-form'), n: $('#ph-nombre'), p: $('#ph-precio'), c: $('#ph-cantidad'), btn: $('#ph-btn'), snack: $('#ph-snack'), cap: $('#sim-caption'), step: $('#sim-step') };
+  let mode = 'final', stage = 12, readingStage = 0, snackTimer, flashTimer;
+
+  function clearErrors() { ['nombre', 'precio', 'cantidad'].forEach(k => { const f = $('#f-' + k); f.classList.remove('has-err'); f.querySelector('.err').textContent = ''; }); }
+  function setStage(s) {
+    stage = s;
+    const placeholder = s <= 3;
+    els.center.hidden = !placeholder;
+    els.form.hidden = placeholder;
+    els.p.inputMode = s >= 8 ? 'decimal' : 'text';
+    els.c.inputMode = s >= 9 ? 'numeric' : 'text';
+    if (s < 11) clearErrors();
+    const key = s >= 11 ? 11 : s <= 2 ? 0 : s;
+    const [t, d] = captions[key];
+    els.cap.classList.remove('flash');
+    els.cap.innerHTML = `<b>${t}</b>${d}`;
+    els.step.textContent = mode === 'final' ? 'Versión final' : (s === 0 ? 'Inicio' : 'Paso ' + s);
+  }
+  function setMode(m) {
+    mode = m;
+    $$('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+    setStage(m === 'final' ? 12 : readingStage);
+  }
+  $$('[data-mode]').forEach(b => b.addEventListener('click', () => { switched = true; setMode(b.dataset.mode); }));
+
+  function ripple(e) {
+    const r = els.btn.getBoundingClientRect();
+    const d = Math.max(r.width, r.height);
+    const s = document.createElement('span');
+    s.className = 'rip';
+    const x = (e && e.clientX ? e.clientX - r.left : r.width / 2) - d / 2;
+    const y = (e && e.clientY ? e.clientY - r.top : r.height / 2) - d / 2;
+    s.style.cssText = `width:${d}px;height:${d}px;left:${x}px;top:${y}px`;
+    els.btn.appendChild(s);
+    setTimeout(() => s.remove(), 550);
+  }
+  function validate() {
+    const res = { nombre: vNombre(els.n.value), precio: vPrecio(els.p.value), cantidad: vCantidad(els.c.value) };
+    let ok = true;
+    for (const k in res) {
+      const f = $('#f-' + k);
+      f.classList.toggle('has-err', !!res[k]);
+      f.querySelector('.err').textContent = res[k] || '';
+      if (res[k]) ok = false;
+    }
+    if (ok) {
+      els.snack.classList.remove('show');
+      void els.snack.offsetWidth;
+      els.snack.classList.add('show');
+      clearTimeout(snackTimer);
+      snackTimer = setTimeout(() => els.snack.classList.remove('show'), 4000);
+    }
+    return ok;
+  }
+  els.form.addEventListener('submit', e => {
+    e.preventDefault();
+    if (stage >= 11) { validate(); return; }
+    els.cap.classList.add('flash');
+    els.cap.innerHTML = '<b>El botón no hace nada todavía</b>Su código es onPressed: () {}. Las reglas se ejecutarán en el paso 11.';
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => setStage(stage), 3200);
+  });
+  els.btn.addEventListener('pointerdown', e => ripple(e));
+  $('#ph-reset').addEventListener('click', () => { els.n.value = els.p.value = els.c.value = ''; clearErrors(); els.snack.classList.remove('show'); });
+
+  /* ---------- Pruebas del paso 12 ---------- */
+  const tests = {
+    1: ['', '', ''],
+    2: ['Teclado', '85000', '10'],
+    3: ['Teclado', 'abc', '10'],
+    4: ['Teclado', '85000', '2.5']
+  };
+  const checked = new Set(store.get('inv1-tests', []));
+  function paintTests() {
+    $$('[data-test]').forEach(i => { i.checked = checked.has(i.dataset.test); i.closest('.check-item').classList.toggle('on', i.checked); });
+    $('#test-count').textContent = checked.size + ' de 4';
+  }
+  $$('[data-test]').forEach(i => i.addEventListener('change', () => { i.checked ? checked.add(i.dataset.test) : checked.delete(i.dataset.test); store.set('inv1-tests', [...checked]); paintTests(); }));
+  paintTests();
+  $$('[data-try]').forEach(b => b.addEventListener('click', () => {
+    const [n, p, c] = tests[b.dataset.try];
+    switched = true;
+    setMode('final');
+    els.n.value = n; els.p.value = p; els.c.value = c;
+    clearErrors();
+    if (phoneIsDrawer()) body.classList.add('phone-open');
+    setTimeout(() => { ripple(); validate(); }, phoneIsDrawer() ? 420 : 250);
+  }));
+
+  /* ---------- Paso actual al leer ---------- */
+  const secs = $$('main section[id]');
+  const links = $$('.nav a');
+  let current = null;
+  function spy() {
+    const line = innerHeight * 0.32;
+    let c = secs[0];
+    for (const s of secs) if (s.getBoundingClientRect().top <= line) c = s;
+    if (c === current) return;
+    current = c;
+    links.forEach(a => a.classList.toggle('is-current', a.getAttribute('href') === '#' + c.id));
+    readingStage = c.id === 'inicio' ? 0 : +c.dataset.stage;
+    if (mode === 'follow') setStage(readingStage);
+  }
+  let ticking = false;
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; spy(); }); } }, { passive: true });
+
+  // Ejemplo inicial: app terminada con datos de muestra; al empezar a leer los pasos, el teléfono sigue tu lectura.
+  els.n.value = 'Teclado'; els.p.value = '85000'; els.c.value = '10';
+  setMode('final');
+  spy();
+  let switched = false;
+  addEventListener('scroll', () => {
+    if (switched || mode !== 'final') return;
+    if ($('#paso-1').getBoundingClientRect().top < innerHeight * 0.32) { switched = true; setMode('follow'); }
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
